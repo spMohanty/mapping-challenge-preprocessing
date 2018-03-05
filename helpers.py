@@ -16,10 +16,10 @@ def lat_long_to_pixel(tiff_source, point_x, point_y, bounds=(0,400, 0, 400)):
     maxx_ = bounds[1]
     miny_ = bounds[2]
     maxy_ = bounds[3]
-    xPixel = max(xPixel, minx_)
-    xPixel = min(maxx_, xPixel)
-    yPixel = max(yPixel, miny_)
-    yPixel = min(miny_, yPixel)
+    # xPixel = max(xPixel, minx_)
+    # xPixel = min(maxx_, xPixel)
+    # yPixel = max(yPixel, miny_)
+    # yPixel = min(miny_, yPixel)
     return xPixel, yPixel
 
 if __name__ == "__main__":

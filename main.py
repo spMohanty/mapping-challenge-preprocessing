@@ -22,7 +22,6 @@ def process_tile(xml_path, image_path, geojson_path, segmentation_path):
     MS Coco format
     """
     xml = xmltodict.parse(open(xml_path).read())
-    print(xml)
     tiff_source = gdal.Open(xml["annotation"]["filename"])
     number_of_buildings = len(xml["annotation"]["object"])
     if number_of_buildings == 0:
@@ -34,11 +33,13 @@ def process_tile(xml_path, image_path, geojson_path, segmentation_path):
         """
         TODO: Assert that this is a Polygon feature
         """
-        coord = f["geometry"]["coordinates"][0]
-        for _subpolygon in coord:
-            if type(_subpolygon) == list and len(_subpolygon) == 3:
-                X, Y = lat_long_to_pixel(tiff_source, _subpolygon[0], _subpolygon[1])
-                print(X, Y)
+        if (f["type"] == "Feature") and "geometry" in f.keys():
+            polygons = f["geometry"]["coordinates"]
+            for polygon in polygons:
+                for coord in polygon:
+                    if type(coord) == list and len(coord) == 3:
+                            X, Y = lat_long_to_pixel(tiff_source, coord[0], coord[1])
+                            print(X, Y, coord)
 
         """
         TODO: Aggregate into the correct JSON structure
