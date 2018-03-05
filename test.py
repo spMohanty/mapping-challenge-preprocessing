@@ -8,11 +8,10 @@ from PIL import Image
 import numpy as np
 from osgeo import gdal
 
-path_to_file = '/mount/SDG/sean/spacenet/data/processedBuildingLabels/3band/'
-
-def get_coordinates(filename):
-	#_file = path_to_file + filename
-	_file = filename
+path_to_tiff_foder = '/mount/SDG/sean/spacenet/data/processedBuildingLabels/3band/'
+path_to_geojson_folder = '/mount/SDG/sean/spacenet/data/processedBuildingLabels/vectorData/geoJson/'
+def get_coordinates(filepath):
+	_file = filepath
 	ds = gdal.Open(_file)
 	geoTransform = ds.GetGeoTransform()
 	width = ds.RasterXSize
@@ -28,7 +27,7 @@ def get_coordinates(filename):
 			coords[i][j][1] = (j * pixelHeight) + yOrigin
 	return coords
 
-filename = path_to_file + '3band_AOI_1_RIO_img2083.tif'
+filename = path_to_tiff_foder + '3band_AOI_1_RIO_img2083.tif'
 fake_coord = get_coordinates(filename) # 438x406 list of lists // np array of size (43,406,2)
 
 img = np.zeros((439, 406, 3), dtype=np.uint8)
@@ -43,7 +42,8 @@ for _x in range(fake_coord.shape[0]):
 		points.append(Point(coord[_x, _y, 0], coord[_x, _y, 1]))
 
 
-with open('/mount/SDG/sean/spacenet/data/processedBuildingLabels/vectorData/geoJson/Geo_AOI_1_RIO_img2083.geojson') as f:
+geojson_file = path_to_geojson_folder+'/Geo_AOI_1_RIO_img2083.geojson'
+with open(geojson_file) as f:
         data = json.load(f)
 
 #for feature in data['features']:
@@ -93,4 +93,4 @@ vis.image(picture, win="picture", env="crowdai")
 #img = Image.fromarray(img, 'RGB')
 #print(img)
 #img.save('my.png')
-#img.show() 
+#img.show()
