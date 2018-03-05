@@ -1,27 +1,135 @@
-<PAMDataset>
-  <SRS>GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433],AUTHORITY["EPSG","4326"]]</SRS>
-  <GeoTransform> -1.1521733759999999e+02,  2.6999999999688385e-06,  0.0000000000000000e+00,  3.6221312699899997e+01,  0.0000000000000000e+00, -2.6999999999866020e-06</GeoTransform>
-  <Metadata domain="IMAGE_STRUCTURE">
-    <MDI key="COMPRESSION">JPEG</MDI>
-    <MDI key="INTERLEAVE">PIXEL</MDI>
-    <MDI key="SOURCE_COLOR_SPACE">YCbCr</MDI>
-  </Metadata>
-  <Metadata>
-    <MDI key="AREA_OR_POINT">Area</MDI>
-  </Metadata>
-  <PAMRasterBand band="1">
-    <Metadata domain="IMAGE_STRUCTURE">
-      <MDI key="COMPRESSION">JPEG</MDI>
-    </Metadata>
-  </PAMRasterBand>
-  <PAMRasterBand band="2">
-    <Metadata domain="IMAGE_STRUCTURE">
-      <MDI key="COMPRESSION">JPEG</MDI>
-    </Metadata>
-  </PAMRasterBand>
-  <PAMRasterBand band="3">
-    <Metadata domain="IMAGE_STRUCTURE">
-      <MDI key="COMPRESSION">JPEG</MDI>
-    </Metadata>
-  </PAMRasterBand>
-</PAMDataset>
+<?xml version="1.0" ?>
+<annotation>
+  <folder>spacenetV2</folder>
+  <filename>/mount/SDG/mapping-challenge/AOI_2_Vegas_Train/PASCALVOC_annotations/RGB-PanSharpen/RGB-PanSharpen__-115.3075176_36.1476026998.tif</filename>
+  <source>
+    <database>spacenetV2</database>
+    <annotation>PASCALVOC2012</annotation>
+  </source>
+  <size>
+    <width>400</width>
+    <height>400</height>
+    <depth>3</depth>
+  </size>
+  <segmented>1</segmented>
+  <object>
+    <name>building</name>
+    <pose>Left</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <bndbox>
+      <xmin>340</xmin>
+      <ymin>365</ymin>
+      <xmax>400</xmax>
+      <ymax>400</ymax>
+    </bndbox>
+  </object>
+  <object>
+    <name>building</name>
+    <pose>Left</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <bndbox>
+      <xmin>333</xmin>
+      <ymin>315</ymin>
+      <xmax>400</xmax>
+      <ymax>358</ymax>
+    </bndbox>
+  </object>
+  <object>
+    <name>building</name>
+    <pose>Left</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <bndbox>
+      <xmin>318</xmin>
+      <ymin>252</ymin>
+      <xmax>400</xmax>
+      <ymax>297</ymax>
+    </bndbox>
+  </object>
+  <object>
+    <name>building</name>
+    <pose>Left</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <bndbox>
+      <xmin>323</xmin>
+      <ymin>203</ymin>
+      <xmax>394</xmax>
+      <ymax>245</ymax>
+    </bndbox>
+  </object>
+  <object>
+    <name>building</name>
+    <pose>Left</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <bndbox>
+      <xmin>305</xmin>
+      <ymin>140</ymin>
+      <xmax>398</xmax>
+      <ymax>189</ymax>
+    </bndbox>
+  </object>
+  <object>
+    <name>building</name>
+    <pose>Left</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <bndbox>
+      <xmin>315</xmin>
+      <ymin>90</ymin>
+      <xmax>380</xmax>
+      <ymax>134</ymax>
+    </bndbox>
+  </object>
+  <object>
+    <name>building</name>
+    <pose>Left</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <bndbox>
+      <xmin>288</xmin>
+      <ymin>33</ymin>
+      <xmax>381</xmax>
+      <ymax>87</ymax>
+    </bndbox>
+  </object>
+  <object>
+    <name>building</name>
+    <pose>Left</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <bndbox>
+      <xmin>92</xmin>
+      <ymin>375</ymin>
+      <xmax>131</xmax>
+      <ymax>400</ymax>
+    </bndbox>
+  </object>
+  <object>
+    <name>building</name>
+    <pose>Left</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <bndbox>
+      <xmin>92</xmin>
+      <ymin>304</ymin>
+      <xmax>153</xmax>
+      <ymax>367</ymax>
+    </bndbox>
+  </object>
+  <object>
+    <name>building</name>
+    <pose>Left</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <bndbox>
+      <xmin>92</xmin>
+      <ymin>249</ymin>
+      <xmax>131</xmax>
+      <ymax>296</ymax>
+    </bndbox>
+  </object>
+</annotation>

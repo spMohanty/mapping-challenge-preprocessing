@@ -22,11 +22,12 @@ def process_tile(xml_path, image_path, geojson_path, segmentation_path):
     MS Coco format
     """
     xml = xmltodict.parse(open(xml_path).read())
+    print(xml)
     tiff_source = gdal.Open(xml["annotation"]["filename"])
     number_of_buildings = len(xml["annotation"]["object"])
     if number_of_buildings == 0:
         "Ignore this"
-        continue
+        # continue
 
     g = json.loads(open(geojson_path).read())
     for f in g["features"]:
@@ -35,8 +36,9 @@ def process_tile(xml_path, image_path, geojson_path, segmentation_path):
         """
         coord = f["geometry"]["coordinates"][0]
         for _subpolygon in coord:
-             X, Y = lat_long_to_pixel(tiff_source, _subpolygon[0], _subpolygon[1])
-             print(X, Y)
+            if type(_subpolygon) == list and len(_subpolygon) == 3:
+                X, Y = lat_long_to_pixel(tiff_source, _subpolygon[0], _subpolygon[1])
+                print(X, Y)
 
         """
         TODO: Aggregate into the correct JSON structure
