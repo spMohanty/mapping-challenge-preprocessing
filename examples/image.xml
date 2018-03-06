@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <annotation>
   <folder>spacenetV2</folder>
-  <filename>/mount/SDG/mapping-challenge/AOI_2_Vegas_Train/PASCALVOC_annotations/RGB-PanSharpen/RGB-PanSharpen__-115.3075176_36.1476026998.tif</filename>
+  <filename>examples/tile.tiff</filename>
   <source>
     <database>spacenetV2</database>
     <annotation>PASCALVOC2012</annotation>
