@@ -30,3 +30,6 @@ def info():
              'url': 'https://www.crowdai.org/challenges/mapping-challenge',
              'version': '1.0',
              'year': 2018}
+
+def categories():
+    return [{'id': 100, 'name': 'building', 'supercategory': 'building'}]
