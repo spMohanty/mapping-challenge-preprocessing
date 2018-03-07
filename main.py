@@ -51,13 +51,14 @@ def process_tile(xml_path, image_path, geojson_path, segmentation_path):
                         X, Y = lat_long_to_pixel(tiff_source, coord[0], coord[1])
                         _polygon.extend([X, Y])
 
-                print(_polygon)
                 _polygons.append(_polygon)
 
             segmentation, area = get_annotation(_polygons, tile_width, tile_height)
+            segmentation_poly, area = get_annotation(_polygons, tile_width, tile_height)
 
             bndbox = xml["annotation"]["object"][i]["bndbox"]
             annotation = {"segmentation": segmentation,
+                          "segmentation_poly": segmentation_poly,
                           "area": np.float(area),
                           "iscrowd": 0,
                           "image_id": 54605,
@@ -69,12 +70,10 @@ def process_tile(xml_path, image_path, geojson_path, segmentation_path):
             annotations.append(annotation)
 
         i = i + 1
-
-    # print("Locally aggregated Polygons : ", _polygons)
-    print(annotations)
+    return annotations
 
 
-def get_annotation(polygons, w, h):
+def get_annotation(polygons, w, h, poly_format=False):
     segmentation = []
     for polygon in polygons:
         segmentation.extend(polygon)
@@ -84,11 +83,11 @@ def get_annotation(polygons, w, h):
     area = cocomask.area(RLE)
 
     # poly format
-    # return [segmentation], area
-
-    # RLE format
-    return RLE, area
-
+    if poly_format:
+        return [segmentation], area
+    else:
+        # RLE format
+        return RLE, area
 
 if __name__ == "__main__":
     ms_coco_format = process_tile(xml_path, image_path, geojson_path, segmentation_path)
