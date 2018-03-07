@@ -12,7 +12,7 @@ import templates
 
 from pycocotools import mask as cocomask
 
-def process_tile(image_id, xml_path, image_path, geojson_path, segmentation_path, rotation=0):
+def process_tile(image_id, xml_path, image_path, geojson_path, rotation=0):
     """
     Processes a single tile and returns the corresponding object in
     MS Coco format
