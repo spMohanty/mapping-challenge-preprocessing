@@ -8,6 +8,7 @@ import shutil
 import xmltodict
 import json
 from osgeo import gdal
+import random
 
 SALT = "5a299fff-89c7-4fda-8d7d-c62b06397919"
 OUTPUT = "/mount/SDG/mapping-challenge/generated"
@@ -16,6 +17,7 @@ total = 0
 empty = 0
 
 np.random.seed(17060728)
+random.seed(17060728)
 
 import helpers
 
@@ -58,7 +60,7 @@ for _ann in glob.glob(path):
     if "annotation" in xml.keys():
         tiff_source = gdal.Open(xml["annotation"]["filename"])
     else:
-        continue
+        continue3
 
     number_of_buildings = len(xml["annotation"]["object"])
     if number_of_buildings == 0:
