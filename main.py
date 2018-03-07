@@ -8,8 +8,7 @@ import shutil
 import xmltodict
 import json
 from osgeo import gdal
-from helpers import lat_long_to_pixel, rotate
-from pycocotools import mask as cocomask
+from helpers import lat_long_to_pixel, rotate, compute_annotations
 import math
 
 import templates
@@ -70,7 +69,11 @@ def process_tile(image_id, xml_path, image_path, geojson_path, segmentation_path
 
                 _polygons.append(_polygon)
 
-            segmentation, bbox, area = get_annotation(_polygons, tile_width, tile_height, poly_format=True)
+            segmentation, bbox, area = compute_annotations(
+                                            _polygons,
+                                            tile_width,
+                                            tile_height,
+                                            poly_format=True)
 
             annotation = templates.annotataion(
                                 id=i+1,
@@ -87,38 +90,6 @@ def process_tile(image_id, xml_path, image_path, geojson_path, segmentation_path
     return annotations
 
 
-def get_annotation(polygons, w, h, poly_format=False):
-    segmentation = []
-    xmin = w+100
-    xmax = -1
-    ymin = h+100
-    ymax = -1
-    for polygon in polygons:
-        assert len(polygon) % 2 == 0
-        length = int(len(polygon)/2)
-        X_ = [polygon[i] for i in range(length)]
-        Y_ = [polygon[i*2] for i in range(length)]
-        _xmin = min(X_)
-        _xmax = max(X_)
-        _ymin = min(Y_)
-        _ymax = max(Y_)
-        if _xmin < xmin: xmin = _xmin
-        if _xmax > xmax: xmax = _xmax
-        if _ymin < ymin: ymin = _ymin
-        if _ymax > ymax: ymax = _ymax
-        segmentation.extend(polygon)
-
-    RLEs = cocomask.frPyObjects([segmentation], w, h)
-    RLE = cocomask.merge(RLEs)
-    area = cocomask.area(RLE)
-
-    bbox = (xmin, ymin, xmax-xmin, ymax-ymin)
-    # poly format
-    if poly_format:
-        return [segmentation], bbox, area
-    else:
-        # RLE format
-        return RLE, bbox, area
 
 if __name__ == "__main__":
     ms_coco_format = process_tile(54605, xml_path, image_path, geojson_path, segmentation_path, rotation=0)
