@@ -12,6 +12,8 @@ from helpers import process_tile
 import random
 import json
 import uuid
+import hashlib
+
 """
 Format floating point values to 2 decimal places
 """
@@ -19,8 +21,9 @@ from json import encoder
 encoder.FLOAT_REPR = lambda o: format(o, '.2f')
 # Reference : https://stackoverflow.com/questions/1447287/format-floats-with-standard-json-module
 
+rd = random.Random()
 np.random.seed(17060728)
-random.seed(17060728)
+rd.seed(17060728)
 
 SALT = "5a299fff-89c7-4fda-8d7d-c62b06397919"
 OUTPUT = "/mount/SDG/mapping-challenge/generated"
@@ -32,7 +35,7 @@ def ensure_directories_exist(dataset_name):
     for mode in ["train", "test"]:
         for dir_type in ["images", "annotations"]:
             try:
-                os.makedirs("{}/{}/{}/images".format(OUTPUT, dataset_name, mode))
+                os.makedirs("{}/{}/{}/{}".format(OUTPUT, dataset_name, mode, dir_type))
             except:
                 pass
 
@@ -54,7 +57,10 @@ def generate_data(filelist, mode="train"):
         #     dataset_name, "\n", xml_path, "\n", geojson_path, "\n", \
         #     segcls_path, "\n", segobj_path)
 
-        image_id = str(uuid.uuid4())
+        md5 = hashlib.md5()
+        md5.update((_file+SALT).encode('ascii'))
+        image_id =str(md5.hexdigest())
+        print(image_id)
         annotations = process_tile(image_id, xml_path, _file, geojson_path)
         if annotations:
             foo=1
