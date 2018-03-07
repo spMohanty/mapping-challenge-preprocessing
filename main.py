@@ -37,14 +37,16 @@ def ensure_directories_exist(dataset_name):
                 pass
 
 def generate_data(filelist, mode="train"):
-    for _file in filelist:
+    no_buildings = 0
+    for _idx, _file in enumerate(filelist):
+        print("Failed Processing : {}, {}".format(no_buildings, _idx))
         image_file_name = _file.split("/")[-1]
         image_key = image_file_name.replace(".jpg", "")
 
         dataset_name = _file.split("/")[-4]
         segcls_path = _file.replace(".jpg", "segcls.png")
         segobj_path = _file.replace(".jpg", "segobj.png")
-        xml_path = _file.replace(".jpg", ".jpg.aux.xml")
+        xml_path = _file.replace(".jpg", ".xml")
         geojson_path = _file.replace("/annotations/","/geojson/buildings/")\
                             .replace("RGB-PanSharpen", "buildings")\
                             .replace(".jpg", ".geojson")
@@ -57,9 +59,9 @@ def generate_data(filelist, mode="train"):
         if annotations:
             foo=1
         else:
-            print("No buildings in ")
+            no_buildings += 1
+            print("No buildings in ", _file)
 
-        break
 
 if __name__ == "__main__":
     # xml_path = "examples/image.xml"

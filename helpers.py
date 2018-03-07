@@ -22,6 +22,11 @@ def process_tile(image_id, xml_path, image_path, geojson_path, rotation=0):
     """
     assert rotation in [0, math.pi/2, -1*math.pi/2, math.pi]
     xml = xmltodict.parse(open(xml_path).read())
+    if "annotation" not in xml.keys():
+        return False
+    if "object" not in xml["annotation"].keys():
+        return False
+
     tiff_source = gdal.Open(xml["annotation"]["filename"])
     tile_width = int(xml["annotation"]["size"]["width"])
     tile_height = int(xml["annotation"]["size"]["height"])
@@ -35,24 +40,36 @@ def process_tile(image_id, xml_path, image_path, geojson_path, rotation=0):
     i = 0
     g = json.loads(open(geojson_path).read())
 
+    def gather_polygon(polygon):
+        _polygon = []
+        for coord in polygon:
+            if type(coord) == list and len(coord) == 3:
+                X, Y = lat_long_to_pixel(tiff_source, coord[0], coord[1])
+                if rotation:
+                    X, Y = rotate((tile_width/2, tile_height/2), (X, Y), rotation )
+                _polygon.extend([X, Y])
+            else:
+                raise Exception("Unknown Polyngon recieved : ", polygon)
+
+        return _polygon
+
     for f in g["features"]:
         _polygons = []
         """
         TODO: Assert that this is a Polygon feature
         """
-        if (f["type"] == "Feature") and "geometry" in f.keys():
-            polygons = f["geometry"]["coordinates"]
-            for polygon in polygons:
-                _polygon = []
+        if (f["type"] == "Feature") and "geometry" in f.keys() and \
+            f["geometry"]["type"] in ["Polygon", "MultiPolygon"]:
 
-                for coord in polygon:
-                    if type(coord) == list and len(coord) == 3:
-                        X, Y = lat_long_to_pixel(tiff_source, coord[0], coord[1])
-                        if rotation:
-                            X, Y = rotate((tile_width/2, tile_height/2), (X, Y), rotation )
-                        _polygon.extend([X, Y])
-
-                _polygons.append(_polygon)
+            if f["geometry"]["type"] == "Polygon":
+                polygons = f["geometry"]["coordinates"]
+                for polygon in polygons:
+                    _polygons.append(gather_polygon(polygon))
+            elif f["geometry"]["type"] == "MultiPolygon":
+                multipolygons = f["geometry"]["coordinates"]
+                for multipolygon in multipolygons:
+                    for polygon in multipolygon:
+                        _polygons.append(gather_polygon(polygon))
 
             segmentation, bbox, area = compute_annotations(
                                             _polygons,
