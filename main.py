@@ -8,8 +8,9 @@ import shutil
 import xmltodict
 import json
 from osgeo import gdal
-from helpers import lat_long_to_pixel
+from helpers import lat_long_to_pixel, rotate
 from pycocotools import mask as cocomask
+import math
 
 xml_path = "examples/image.xml"
 image_path = "examples/image.jpg"
@@ -17,11 +18,15 @@ geojson_path = "examples/buildings.geojson"
 segmentation_path = "examples/segmentation.png"
 
 
-def process_tile(xml_path, image_path, geojson_path, segmentation_path):
+def process_tile(xml_path, image_path, geojson_path, segmentation_path, rotation=0):
     """
     Processes a single tile and returns the corresponding object in
     MS Coco format
+
+    :param:
+        rotation : Only support rotataion values of 0, 90, -90, 180
     """
+    assert rotation in [0, math.pi/2, -1*math.pi/2, math.pi]
     xml = xmltodict.parse(open(xml_path).read())
     tiff_source = gdal.Open(xml["annotation"]["filename"])
     tile_width = int(xml["annotation"]["size"]["width"])
@@ -49,6 +54,9 @@ def process_tile(xml_path, image_path, geojson_path, segmentation_path):
                 for coord in polygon:
                     if type(coord) == list and len(coord) == 3:
                         X, Y = lat_long_to_pixel(tiff_source, coord[0], coord[1])
+                        if rotation:
+
+                            X, Y = rotate((tile_width/2, tile_height/2), (X, Y), rotation )
                         _polygon.extend([X, Y])
 
                 _polygons.append(_polygon)
@@ -64,7 +72,7 @@ def process_tile(xml_path, image_path, geojson_path, segmentation_path):
                           "image_id": 54605,
                           "bbox": [int(bndbox["xmin"]), int(bndbox["ymin"]), int(bndbox["xmax"]) - int(bndbox["xmin"]),
                                    int(bndbox["ymax"]) - int(bndbox["ymin"])],
-                          "category_id": 0,
+                          "category_id": 100,
                           "id": i + 1}
 
             annotations.append(annotation)
@@ -90,5 +98,5 @@ def get_annotation(polygons, w, h, poly_format=False):
         return RLE, area
 
 if __name__ == "__main__":
-    ms_coco_format = process_tile(xml_path, image_path, geojson_path, segmentation_path)
-    print(ms_coco_format)
+    ms_coco_format = process_tile(xml_path, image_path, geojson_path, segmentation_path, rotation=math.pi)
+    print("anns = ",ms_coco_format)
