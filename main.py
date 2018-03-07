@@ -18,7 +18,7 @@ geojson_path = "examples/buildings.geojson"
 segmentation_path = "examples/segmentation.png"
 
 
-def process_tile(xml_path, image_path, geojson_path, segmentation_path, rotation=0):
+def process_tile(image_id, xml_path, image_path, geojson_path, segmentation_path, rotation=0):
     """
     Processes a single tile and returns the corresponding object in
     MS Coco format
@@ -55,21 +55,20 @@ def process_tile(xml_path, image_path, geojson_path, segmentation_path, rotation
                     if type(coord) == list and len(coord) == 3:
                         X, Y = lat_long_to_pixel(tiff_source, coord[0], coord[1])
                         if rotation:
-
                             X, Y = rotate((tile_width/2, tile_height/2), (X, Y), rotation )
                         _polygon.extend([X, Y])
 
                 _polygons.append(_polygon)
 
             segmentation, area = get_annotation(_polygons, tile_width, tile_height)
-            segmentation_poly, area = get_annotation(_polygons, tile_width, tile_height)
+            segmentation_poly, area = get_annotation(_polygons, tile_width, tile_height, poly_format=True)
 
             bndbox = xml["annotation"]["object"][i]["bndbox"]
             annotation = {"segmentation": segmentation,
                           "segmentation_poly": segmentation_poly,
                           "area": np.float(area),
                           "iscrowd": 0,
-                          "image_id": 54605,
+                          "image_id": image_id,
                           "bbox": [int(bndbox["xmin"]), int(bndbox["ymin"]), int(bndbox["xmax"]) - int(bndbox["xmin"]),
                                    int(bndbox["ymax"]) - int(bndbox["ymin"])],
                           "category_id": 100,
@@ -98,5 +97,5 @@ def get_annotation(polygons, w, h, poly_format=False):
         return RLE, area
 
 if __name__ == "__main__":
-    ms_coco_format = process_tile(xml_path, image_path, geojson_path, segmentation_path, rotation=math.pi)
+    ms_coco_format = process_tile(54605, xml_path, image_path, geojson_path, segmentation_path, rotation=0)
     print("anns = ",ms_coco_format)
