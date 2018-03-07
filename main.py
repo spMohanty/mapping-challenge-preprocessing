@@ -9,6 +9,7 @@ import xmltodict
 import json
 from osgeo import gdal
 from helpers import lat_long_to_pixel
+from pycocotools import mask as cocomask
 
 xml_path = "examples/image.xml"
 image_path = "examples/image.jpg"
@@ -23,14 +24,20 @@ def process_tile(xml_path, image_path, geojson_path, segmentation_path):
     """
     xml = xmltodict.parse(open(xml_path).read())
     tiff_source = gdal.Open(xml["annotation"]["filename"])
+    tile_width = int(xml["annotation"]["size"]["width"])
+    tile_height = int(xml["annotation"]["size"]["height"])
     number_of_buildings = len(xml["annotation"]["object"])
     if number_of_buildings == 0:
         "Ignore this"
         # continue
 
+    annotations = []
+
+    i = 0
     g = json.loads(open(geojson_path).read())
-    _polygons = []
+
     for f in g["features"]:
+        _polygons = []
         """
         TODO: Assert that this is a Polygon feature
         """
@@ -38,16 +45,51 @@ def process_tile(xml_path, image_path, geojson_path, segmentation_path):
             polygons = f["geometry"]["coordinates"]
             for polygon in polygons:
                 _polygon = []
+
                 for coord in polygon:
                     if type(coord) == list and len(coord) == 3:
-                            X, Y = lat_long_to_pixel(tiff_source, coord[0], coord[1])
-                            _polygon.append([X, Y])
-                _polygons.append(_polygon)
+                        X, Y = lat_long_to_pixel(tiff_source, coord[0], coord[1])
+                        _polygon.extend([X, Y])
+
                 print(_polygon)
-        """
-        TODO: Aggregate into the correct JSON structure
-        """
-    print("Locally aggregated Polygons : ", _polygons)
+                _polygons.append(_polygon)
+
+            segmentation, area = get_annotation(_polygons, tile_width, tile_height)
+
+            bndbox = xml["annotation"]["object"][i]["bndbox"]
+            annotation = {"segmentation": segmentation,
+                          "area": np.float(area),
+                          "iscrowd": 0,
+                          "image_id": 54605,
+                          "bbox": [int(bndbox["xmin"]), int(bndbox["ymin"]), int(bndbox["xmax"]) - int(bndbox["xmin"]),
+                                   int(bndbox["ymax"]) - int(bndbox["ymin"])],
+                          "category_id": 0,
+                          "id": i + 1}
+
+            annotations.append(annotation)
+
+        i = i + 1
+
+    # print("Locally aggregated Polygons : ", _polygons)
+    print(annotations)
+
+
+def get_annotation(polygons, w, h):
+    segmentation = []
+    for polygon in polygons:
+        segmentation.extend(polygon)
+
+    RLEs = cocomask.frPyObjects([segmentation], w, h)
+    RLE = cocomask.merge(RLEs)
+    area = cocomask.area(RLE)
+
+    # poly format
+    # return [segmentation], area
+
+    # RLE format
+    return RLE, area
+
+
 if __name__ == "__main__":
     ms_coco_format = process_tile(xml_path, image_path, geojson_path, segmentation_path)
     print(ms_coco_format)
