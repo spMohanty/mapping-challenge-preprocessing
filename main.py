@@ -12,6 +12,8 @@ from helpers import lat_long_to_pixel, rotate
 from pycocotools import mask as cocomask
 import math
 
+import templates
+
 import json
 """
 Format floating point values to 2 decimal places
@@ -70,14 +72,15 @@ def process_tile(image_id, xml_path, image_path, geojson_path, segmentation_path
 
             segmentation, bbox, area = get_annotation(_polygons, tile_width, tile_height, poly_format=True)
 
-            annotation = {"segmentation": segmentation,
-                          "area": np.float(area),
-                          "iscrowd": 0,
-                          "image_id": image_id,
-                          "bbox": bbox,
-                          "category_id": 100,
-                          "id": i + 1}
-
+            annotation = templates.annotataion(
+                                id=i+1,
+                                image_id=image_id,
+                                segmentation=segmentation,
+                                area=np.float(area),
+                                bbox=bbox,
+                                category_id=100,
+                                is_crowd=0
+                                )
             annotations.append(annotation)
 
         i = i + 1
