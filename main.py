@@ -12,6 +12,14 @@ from helpers import lat_long_to_pixel, rotate
 from pycocotools import mask as cocomask
 import math
 
+import json
+"""
+Format floating point values to 2 decimal places
+"""
+from json import encoder
+encoder.FLOAT_REPR = lambda o: format(o, '.2f')
+# Reference : https://stackoverflow.com/questions/1447287/format-floats-with-standard-json-module
+
 xml_path = "examples/image.xml"
 image_path = "examples/image.jpg"
 geojson_path = "examples/buildings.geojson"
