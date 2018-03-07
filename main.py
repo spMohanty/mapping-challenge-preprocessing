@@ -68,12 +68,10 @@ def process_tile(image_id, xml_path, image_path, geojson_path, segmentation_path
 
                 _polygons.append(_polygon)
 
-            segmentation, area = get_annotation(_polygons, tile_width, tile_height)
-            segmentation_poly, area = get_annotation(_polygons, tile_width, tile_height, poly_format=True)
+            segmentation, area = get_annotation(_polygons, tile_width, tile_height, poly_format=True)
 
             bndbox = xml["annotation"]["object"][i]["bndbox"]
             annotation = {"segmentation": segmentation,
-                          "segmentation_poly": segmentation_poly,
                           "area": np.float(area),
                           "iscrowd": 0,
                           "image_id": image_id,
