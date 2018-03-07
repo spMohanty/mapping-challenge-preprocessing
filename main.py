@@ -21,23 +21,37 @@ encoder.FLOAT_REPR = lambda o: format(o, '.2f')
 np.random.seed(17060728)
 random.seed(17060728)
 
-xml_path = "examples/image.xml"
-image_path = "examples/image.jpg"
-geojson_path = "examples/buildings.geojson"
-segmentation_path = "examples/segmentation.png"
+SALT = "5a299fff-89c7-4fda-8d7d-c62b06397919"
+OUTPUT = "/mount/SDG/mapping-challenge/generated"
+path = "/mount/SDG/mapping-challenge/AOI_2_Vegas_Train/PASCALVOC_annotations/annotations/*.jpg"
 
 def generate_data(filelist):
     for _file in filelist:
-        print(_file)
+        image_file_name = _file.split("/")[-1]
+        image_key = image_file_name.replace(".jpg", "")
+
+        dataset_name = _file.split("/")[-4]
+        segcls_path = _file.replace(".jpg", "segcls.png")
+        segobj_path = _file.replace(".jpg", "segobj.png")
+        xml_path = _file.replace(".jpg", ".jpg.aux.xml")
+        geojson_path = _file.replace("/annotations/","/geojson/buildings/")\
+                            .replace("RGB-PanSharpen", "buildings")\
+                            .replace(".jpg", ".geojson")
+        print(image_file_name, "\n", image_key, "\n", xml_path, "\n", \
+            dataset_name, "\n", xml_path, "\n", geojson_path, "\n", \
+            segcls_path, "\n", segobj_path)
+
+
         break
 
 if __name__ == "__main__":
+    # xml_path = "examples/image.xml"
+    # image_path = "examples/image.jpg"
+    # geojson_path = "examples/buildings.geojson"
+    # segmentation_path = "examples/segmentation.png"
     # ms_coco_format = process_tile(54605, xml_path, image_path, geojson_path, segmentation_path, rotation=0)
     # print("anns = ",ms_coco_format)
 
-    SALT = "5a299fff-89c7-4fda-8d7d-c62b06397919"
-    OUTPUT = "/mount/SDG/mapping-challenge/generated"
-    path = "/mount/SDG/mapping-challenge/AOI_2_Vegas_Train/PASCALVOC_annotations/annotations/*.xml"
     train_percent = 0.8
     files = glob.glob(path)
 
