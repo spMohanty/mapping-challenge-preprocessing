@@ -21,3 +21,12 @@ def annotataion(id, image_id, segmentation, area, bbox, \
         category_id=category_id,
         is_crowd=is_crowd
     )
+
+def info():
+    return { 'contributor': 'crowdAI.org',
+             'about': 'Dataset derived from the spacenet v2.0 (http://explore.digitalglobe.com/spacenet)',
+             'date_created': '07/03/2018',
+             'description': 'crowdAI mapping-challenge dataset',
+             'url': 'https://www.crowdai.org/challenges/mapping-challenge',
+             'version': '1.0',
+             'year': 2018}
