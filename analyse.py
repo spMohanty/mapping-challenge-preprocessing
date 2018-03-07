@@ -35,6 +35,8 @@ for _ann in glob.glob(path):
     xml_path = _ann.replace(".xml", ".xml")
     geojson_path = _ann.replace("/annotations/","/geojson/buildings/").replace("RGB-PanSharpen", "buildings").replace(".xml", ".geojson")
 
+    print("="*80)
+    print(xml_path, "\n", geojson_path, "\n", segcls_path, "\n", segobj_path)
     try:
         os.makedirs(os.path.join(OUTPUT, dataset_name, "train", "images"))
         os.makedirs(os.path.join(OUTPUT, dataset_name, "train", "labels"))
@@ -53,12 +55,14 @@ for _ann in glob.glob(path):
         mode= "test"
     # Param initializsation done
     xml = xmltodict.parse(open(xml_path).read())
-    tiff_source = gdal.Open(xml["annotation"]["filename"])
+    if "annotation" in xml.keys():
+        tiff_source = gdal.Open(xml["annotation"]["filename"])
+    else:
+        continue
 
     number_of_buildings = len(xml["annotation"]["object"])
     if number_of_buildings == 0:
         "Ignore this"
         continue
 
-    geojson = json.lo
     exit(0)
