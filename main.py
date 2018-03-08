@@ -166,6 +166,10 @@ def generate_data(filelist, mode="train"):
 
         os.rename(source_path, target_path)
         dataset["images"][_idx]["id"] = new_image_id
+        # Correct entry in DATA_MAP
+        DATA_MAP[new_image_id] = DATA_MAP[image_id]
+        del DATA_MAP[image_id]
+
 
     # Correct image_ids in Annotations
     print("Correcting image_ids in annotation files....")
