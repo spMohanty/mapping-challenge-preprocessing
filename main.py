@@ -91,8 +91,16 @@ def generate_data(filelist, mode="train"):
                 OUTPUT, DATASET_NAME, mode,
                 "images", image_id+".jpg")
             copy_image(_file, target_path, rotation=0)
-            # TODO: Add image entry in dataset json
-            # TODO: Save annotation in dataset json
+            #  Add image entry in dataset json
+            dataset["images"].append(
+                templates.image(
+                    id=image_id,
+                    filename=target_path.split("/")[-1],
+                    width=400,
+                    height=400
+                )
+            )
+            #  Save annotation in dataset json
             dataset["annotations"].append(annotations)
 
             for rotation in [90, -90, 180]:
@@ -105,10 +113,19 @@ def generate_data(filelist, mode="train"):
                 # Save Image file
                 target_path = "{}/{}/{}/{}/{}".format(
                     OUTPUT, DATASET_NAME, mode,
-                    "images", image_id+"_{}".format(rotation)+".jpg")
+                    "images", image_id +".jpg")
                 copy_image(_file, target_path, rotation=rotation)
-                # TODO: Add image entry in dataset json
-                # TODO: Save annotation in dataset json
+                # Add image entry in dataset json
+                dataset["images"].append(
+                    templates.image(
+                        id=image_id,
+                        filename=target_path.split("/")[-1],
+                        width=400,
+                        height=400
+                    )
+                )
+
+                # Save annotation in dataset json
                 dataset["annotations"].append(annotations)
         else:
             no_buildings += 1
@@ -119,10 +136,6 @@ def generate_data(filelist, mode="train"):
         OUTPUT, DATASET_NAME, mode,
         "annotations", "annotation.json")
     print("Writing dataset annotations to : ", target_path)
-    """
-    Format floating point values to 2 decimal places
-    """
-    json.encoder.FLOAT_REPR = lambda f: ("%.2f" % f)
     fp = open(target_path, "w")
     fp.write(json.dumps(dataset))
     fp.close()
@@ -145,4 +158,5 @@ if __name__ == "__main__":
     train_set = files[:marker]
     test_set = files[marker:]
 
-    train_annotations = generate_data(train_set[:5], mode="train")
+    train_annotations = generate_data(train_set, mode="train")
+    test_annotations = generate_data(test_set, mode="test")

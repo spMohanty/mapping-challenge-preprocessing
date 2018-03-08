@@ -12,6 +12,7 @@ import templates
 
 from pycocotools import mask as cocomask
 import uuid
+import sys
 
 annotation_id_map = {}
 def get_random_annotation_id():
@@ -89,7 +90,7 @@ def process_tile(image_id, xml_path, image_path, geojson_path, rotation=0):
                                             _polygons,
                                             tile_width,
                                             tile_height,
-                                            poly_format=True)
+                                            poly_format=False)
 
             annotation = templates.annotataion(
                                 id=get_random_annotation_id(),
@@ -137,6 +138,9 @@ def compute_annotations(polygons, w, h, poly_format=False):
         return [segmentation], bbox, area
     else:
         # RLE format
+        if sys.version_info >= (3, 0):
+            RLE["counts"] = RLE["counts"].decode('ascii')
+
         return RLE, bbox, area
 
 def lat_long_to_pixel(tiff_source, point_x, point_y, bounds=(0,400, 0, 400)):
