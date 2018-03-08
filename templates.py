@@ -19,7 +19,7 @@ def annotataion(id, image_id, segmentation, area, bbox, \
         area=area,
         bbox=bbox,
         category_id=category_id,
-        is_crowd=is_crowd
+        iscrowd=is_crowd
     )
 
 def info():

@@ -17,7 +17,7 @@ import sys
 annotation_id_map = {}
 def get_random_annotation_id():
     while True:
-        _id = str(uuid.uuid4())[:8]
+        _id = str(uuid.uuid4())
         # This is just to avoid collision in the random ids
         try:
             foo = annotation_id_map[_id]
@@ -25,6 +25,11 @@ def get_random_annotation_id():
         except:
             # Else, respond with the generated id
             return _id
+
+def get_annotation_id_map():
+    return annotation_id_map
+def set_annotation_id_map(_map):
+    annotation_id_map = _map
 
 
 def process_tile(image_id, xml_path, image_path, geojson_path, rotation=0):
