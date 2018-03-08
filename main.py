@@ -25,6 +25,8 @@ DATASET_NAME = "AOI_2_Vegas_Train"
 path = "/mount/SDG/mapping-challenge/{}/PASCALVOC_annotations/annotations/*.jpg".format(DATASET_NAME)
 IMAGE_PATH_TEMPLATE = "{}/{}/{}images"
 
+DATA_MAP = {}
+
 image_id_map = {}
 def get_random_image_id():
     while True:
@@ -100,6 +102,9 @@ def generate_data(filelist, mode="train"):
                     height=400
                 )
             )
+            # Add to DATA_MAP
+            DATA_MAP[image_id] =  _file + "::0"
+
             #  Save annotation in dataset json
             dataset["annotations"].append(annotations)
 
@@ -124,6 +129,8 @@ def generate_data(filelist, mode="train"):
                         height=400
                     )
                 )
+                # Add to DATA_MAP
+                DATA_MAP[image_id] =  _file + "::" + str(rotation)
 
                 # Save annotation in dataset json
                 dataset["annotations"].append(annotations)
@@ -139,6 +146,14 @@ def generate_data(filelist, mode="train"):
     fp = open(target_path, "w")
     fp.write(json.dumps(dataset))
     fp.close()
+
+    # Save datamap
+    target_path = "{}/{}/{}".format(
+        OUTPUT, DATASET_NAME, mode + "_DATA_MAP.json")
+    fp = open(target_path, "w")
+    fp.write(json.dumps(DATA_MAP))
+    fp.close()
+    print("Writing DATA_MAP to ", target_path)
 
 
 if __name__ == "__main__":
