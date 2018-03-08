@@ -40,7 +40,10 @@ def get_random_image_id():
             return _id
 
 def ensure_directories_exist(dataset_name):
-    shutil.rmtree(OUTPUT)
+    try:
+        shutil.rmtree("{}/{}".format(OUTPUT, dataset_name))
+    except:
+        pass
     for mode in ["train", "test"]:
         for dir_type in ["images", "annotations"]:
             try:
