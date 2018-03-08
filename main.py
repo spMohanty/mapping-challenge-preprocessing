@@ -44,7 +44,7 @@ def ensure_directories_exist(dataset_name):
         shutil.rmtree("{}/{}".format(OUTPUT, dataset_name))
     except:
         pass
-    for mode in ["train", "test"]:
+    for mode in ["train", "val", "test"]:
         for dir_type in ["images", "annotations"]:
             try:
                 os.makedirs("{}/{}/{}/{}".format(OUTPUT, dataset_name, mode, dir_type))
@@ -223,20 +223,25 @@ if __name__ == "__main__":
     # ms_coco_format = process_tile(54605, xml_path, image_path, geojson_path, rotation=0)
     # print("anns = ",ms_coco_format)
 
-    # for _dataset in ["AOI_2_Vegas_Train", "AOI_3_Paris_Train", "AOI_4_Shanghai_Train", "AOI_5_Khartoum_Train"]:
-    for _dataset in ["AOI_2_Vegas_Train"]:
+    for _dataset in ["AOI_2_Vegas_Train", "AOI_3_Paris_Train", "AOI_4_Shanghai_Train", "AOI_5_Khartoum_Train"]:
+    # for _dataset in ["AOI_2_Vegas_Train"]:
         DATASET_NAME = _dataset
         DATA_MAP = {}
         set_annotation_id_map({})
 
         ensure_directories_exist(DATASET_NAME)
-        train_percent = 0.8
+        train_percent = 0.7
+        val_percent = 0.15
+        test_percent = 0.15
         files = glob.glob(path)[:100]
 
         random.shuffle(files)
-        marker = int(train_percent*len(files))
-        train_set = files[:marker]
-        test_set = files[marker:]
+        marker_1 = int(train_percent*len(files))
+        marker_2 = int((train_percent + val_percent)*len(files))
+        train_set = files[:marker_1]
+        val_set = files[marker_1:marker_2]
+        test_set = files[marker_2:]
 
         train_annotations = generate_data(train_set, mode="train")
+        train_annotations = generate_data(val_set, mode="val")
         test_annotations = generate_data(test_set, mode="test")
