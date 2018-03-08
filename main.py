@@ -167,14 +167,19 @@ if __name__ == "__main__":
     # ms_coco_format = process_tile(54605, xml_path, image_path, geojson_path, rotation=0)
     # print("anns = ",ms_coco_format)
 
-    ensure_directories_exist(DATASET_NAME)
-    train_percent = 0.8
-    files = glob.glob(path)
+    # for _dataset in ["AOI_2_Vegas_Train", "AOI_3_Paris_Train", "AOI_4_Shanghai_Train", "AOI_5_Khartoum_Train"]:
+    for _dataset in ["AOI_2_Vegas_Train"]:
+        DATASET_NAME = _dataset
+        DATA_MAP = {}
 
-    random.shuffle(files)
-    marker = int(train_percent*len(files))
-    train_set = files[:marker]
-    test_set = files[marker:]
+        ensure_directories_exist(DATASET_NAME)
+        train_percent = 0.8
+        files = glob.glob(path)
 
-    train_annotations = generate_data(train_set, mode="train")
-    test_annotations = generate_data(test_set, mode="test")
+        random.shuffle(files)
+        marker = int(train_percent*len(files))
+        train_set = files[:marker]
+        test_set = files[marker:]
+
+        train_annotations = generate_data(train_set, mode="train")
+        test_annotations = generate_data(test_set, mode="test")
