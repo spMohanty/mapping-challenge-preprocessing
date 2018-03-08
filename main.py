@@ -13,13 +13,7 @@ import random
 import json
 import uuid
 import hashlib
-
-"""
-Format floating point values to 2 decimal places
-"""
-from json import encoder
-encoder.FLOAT_REPR = lambda o: format(o, '.2f')
-# Reference : https://stackoverflow.com/questions/1447287/format-floats-with-standard-json-module
+import math
 
 rd = random.Random()
 np.random.seed(17060728)
@@ -29,6 +23,19 @@ SALT = "5a299fff-89c7-4fda-8d7d-c62b06397919"
 OUTPUT = "/mount/SDG/mapping-challenge/generated"
 DATASET_NAME = "AOI_2_Vegas_Train"
 path = "/mount/SDG/mapping-challenge/{}/PASCALVOC_annotations/annotations/*.jpg".format(DATASET_NAME)
+IMAGE_PATH_TEMPLATE = "{}/{}/{}images"
+
+image_id_map = {}
+def get_random_image_id():
+    while True:
+        _id = str(uuid.uuid4())[:8]
+        # This is just to avoid collision in the random ids
+        try:
+            foo = image_id_map[_id]
+            # If this id exists, then try this again
+        except:
+            # Else, respond with the generated id
+            return _id
 
 def ensure_directories_exist(dataset_name):
     shutil.rmtree(OUTPUT)
@@ -39,8 +46,25 @@ def ensure_directories_exist(dataset_name):
             except:
                 pass
 
+def copy_image(source, target_path, rotation):
+    assert os.path.exists(source)
+    print("Creating File : {} , Rotataion : {}".format(target_path, rotation))
+    im = Image.open(source)
+    im = im.rotate(rotation)
+    im.save(target_path)
+
 def generate_data(filelist, mode="train"):
     no_buildings = 0
+
+    """
+    Instantiate dataset json
+    """
+    dataset = {}
+    dataset["info"] = templates.info()
+    dataset["categories"] = templates.categories()
+    dataset["images"] = []
+    dataset["annotations"] = []
+
     for _idx, _file in enumerate(filelist):
         print("Failed Processing : {}, {}".format(no_buildings, _idx))
         image_file_name = _file.split("/")[-1]
@@ -57,16 +81,51 @@ def generate_data(filelist, mode="train"):
         #     dataset_name, "\n", xml_path, "\n", geojson_path, "\n", \
         #     segcls_path, "\n", segobj_path)
 
-        md5 = hashlib.md5()
-        md5.update((_file+SALT).encode('ascii'))
-        image_id =str(md5.hexdigest())
+        image_id = get_random_image_id()
+
         print(image_id)
         annotations = process_tile(image_id, xml_path, _file, geojson_path)
         if annotations:
-            foo=1
+            # Copy over file to relevant folder
+            target_path = "{}/{}/{}/{}/{}".format(
+                OUTPUT, DATASET_NAME, mode,
+                "images", image_id+".jpg")
+            copy_image(_file, target_path, rotation=0)
+            # TODO: Add image entry in dataset json
+            # TODO: Save annotation in dataset json
+            dataset["annotations"].append(annotations)
+
+            for rotation in [90, -90, 180]:
+                if np.random.random() < 0.2:
+                    # Not produce rotated image with a probability of 0.2
+                    continue
+
+                image_id = get_random_image_id()
+                annotations = process_tile(image_id, xml_path, _file, geojson_path, rotation = 0.5*(rotation*1.0/90)*math.pi)
+                # Save Image file
+                target_path = "{}/{}/{}/{}/{}".format(
+                    OUTPUT, DATASET_NAME, mode,
+                    "images", image_id+"_{}".format(rotation)+".jpg")
+                copy_image(_file, target_path, rotation=rotation)
+                # TODO: Add image entry in dataset json
+                # TODO: Save annotation in dataset json
+                dataset["annotations"].append(annotations)
         else:
             no_buildings += 1
             print("No buildings in ", _file)
+
+    # Save dataset annotations
+    target_path = "{}/{}/{}/{}/{}".format(
+        OUTPUT, DATASET_NAME, mode,
+        "annotations", "annotation.json")
+    print("Writing dataset annotations to : ", target_path)
+    """
+    Format floating point values to 2 decimal places
+    """
+    json.encoder.FLOAT_REPR = lambda f: ("%.2f" % f)
+    fp = open(target_path, "w")
+    fp.write(json.dumps(dataset))
+    fp.close()
 
 
 if __name__ == "__main__":
@@ -86,4 +145,4 @@ if __name__ == "__main__":
     train_set = files[:marker]
     test_set = files[marker:]
 
-    train_annotations = generate_data(train_set, mode="train")
+    train_annotations = generate_data(train_set[:5], mode="train")
