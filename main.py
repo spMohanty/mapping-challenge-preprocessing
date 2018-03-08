@@ -141,6 +141,40 @@ def generate_data(filelist, mode="train"):
             no_buildings += 1
             print("No buildings in ", _file)
 
+    # Convert image_id and annotation id to integers (as coco api expects them to be)
+    image_ids = DATA_MAP.keys()
+    random.shuffle(list(image_ids))
+    integral_image_id_map = {}
+    for _idx, _image_id in enumerate(image_ids):
+        integral_image_id_map[_image_id] = _idx
+
+    # Correct Image ids
+    print("Correcting Image ids......")
+    for _idx, image in enumerate(dataset["images"]):
+        # Copy file over
+        image_id = dataset["images"][_idx]["id"]
+        new_image_id = integral_image_id_map[image_id]
+        source_path = "{}/{}/{}/{}/{}".format(
+            OUTPUT, DATASET_NAME, mode,
+            "images", image_id+".jpg")
+        target_path = "{}/{}/{}/{}/{}".format(
+            OUTPUT, DATASET_NAME, mode,
+            "images", str(new_image_id).zfill(12)+".jpg")
+
+        if np.random.random() < 0.2:
+            print("Correcting Image ids :: Completed : {} out of {}".format(_idx, len(image_ids)))
+
+        os.rename(source_path, target_path)
+        dataset["images"][_idx]["id"] = new_image_id
+
+    # Correct image_ids in Annotations
+    print("Correcting image_ids in annotation files....")
+    for _idx, annotation in enumerate(dataset["annotations"]):
+        for _iex, _annotation in enumerate(annotation):
+            image_id = _annotation["image_id"]
+            new_image_id = integral_image_id_map[image_id]
+            dataset["annotations"][_idx][_iex]["image_id"] = new_image_id
+
     # Save dataset annotations
     target_path = "{}/{}/{}/{}/{}".format(
         OUTPUT, DATASET_NAME, mode,
@@ -174,7 +208,7 @@ if __name__ == "__main__":
 
         ensure_directories_exist(DATASET_NAME)
         train_percent = 0.8
-        files = glob.glob(path)
+        files = glob.glob(path)[:100]
 
         random.shuffle(files)
         marker = int(train_percent*len(files))
