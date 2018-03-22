@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 
-def image(id, filename, width=400, height=400):
+def image(id, filename, width=300, height=300):
     return dict(
         id=id,
         file_name=filename,
@@ -24,7 +24,7 @@ def annotataion(id, image_id, segmentation, area, bbox, \
 
 def info():
     return { 'contributor': 'crowdAI.org',
-             'about': 'Dataset derived from the spacenet v2.0 (http://explore.digitalglobe.com/spacenet)',
+             'about': 'Dataset for crowdAI Mapping Challenge',
              'date_created': '07/03/2018',
              'description': 'crowdAI mapping-challenge dataset',
              'url': 'https://www.crowdai.org/challenges/mapping-challenge',

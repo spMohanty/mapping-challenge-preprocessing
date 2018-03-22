@@ -128,8 +128,8 @@ def generate_data(filelist, mode="train"):
                     templates.image(
                         id=image_id,
                         filename=target_path.split("/")[-1],
-                        width=400,
-                        height=400
+                        width=300,
+                        height=300
                     )
                 )
                 # Add to DATA_MAP
