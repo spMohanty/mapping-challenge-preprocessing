@@ -223,8 +223,12 @@ if __name__ == "__main__":
     # ms_coco_format = process_tile(54605, xml_path, image_path, geojson_path, rotation=0)
     # print("anns = ",ms_coco_format)
 
-    for _dataset in ["AOI_2_Vegas_Train", "AOI_3_Paris_Train", "AOI_4_Shanghai_Train", "AOI_5_Khartoum_Train"]:
+    # ln -s /mount/SDG/mapping-challenge/generated/AOI_3_Paris_Train/train/images paris
+    # ln -s /mount/SDG/mapping-challenge/generated/AOI_4_Shanghai_Train/train/images shanghai
+    # ln -s /mount/SDG/mapping-challenge/generated/AOI_5_Khartoum_Train/train/images khartoum
+
     # for _dataset in ["AOI_2_Vegas_Train"]:
+    for _dataset in ["AOI_2_Vegas_Train", "AOI_3_Paris_Train", "AOI_4_Shanghai_Train", "AOI_5_Khartoum_Train"]:
         DATASET_NAME = _dataset
         DATA_MAP = {}
         set_annotation_id_map({})
@@ -233,7 +237,7 @@ if __name__ == "__main__":
         train_percent = 0.7
         val_percent = 0.15
         test_percent = 0.15
-        files = glob.glob(path)[:100]
+        files = glob.glob(path)
 
         random.shuffle(files)
         marker_1 = int(train_percent*len(files))

@@ -3,6 +3,15 @@
 
 **TODO**: Add introduction, installation, usage
 
-# Authors
-* Iuliana Voinea <iulianavoinea96@gmail.com> and Snigdha Dagar <snigdha.dagar@gmail.com>
+# Usage
+```
+./download_data.sh
+./arrange.sh
+python main.py
+```
 
+# Authors
+* Iuliana Voinea <iulianavoinea96@gmail.com>
+* Snigdha Dagar <snigdha.dagar@gmail.com>
+* Florian Laurent <florian.laurent@gmail.com>
+* Sharada Mohanty <sharada.mohanty@epfl.ch>
