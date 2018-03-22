@@ -228,7 +228,8 @@ if __name__ == "__main__":
     # ln -s /mount/SDG/mapping-challenge/generated/AOI_5_Khartoum_Train/train/images khartoum
 
     # for _dataset in ["AOI_2_Vegas_Train"]:
-    for _dataset in ["AOI_2_Vegas_Train", "AOI_3_Paris_Train", "AOI_4_Shanghai_Train", "AOI_5_Khartoum_Train"]:
+    # for _dataset in ["AOI_2_Vegas_Train", "AOI_3_Paris_Train", "AOI_4_Shanghai_Train", "AOI_5_Khartoum_Train"]:
+    for _dataset in ["AOI_3_Paris_Train", "AOI_4_Shanghai_Train", "AOI_5_Khartoum_Train"]:
         DATASET_NAME = _dataset
         DATA_MAP = {}
         set_annotation_id_map({})
