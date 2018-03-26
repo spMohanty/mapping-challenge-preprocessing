@@ -6,6 +6,7 @@ import glob
 import os
 from pycocotools.coco import COCO
 import templates
+import random
 
 for mode in ["train", "val", "test"]:
     OUTPUT_PATH = "../../generated/FINAL/{}".format(mode)
@@ -49,6 +50,9 @@ for mode in ["train", "val", "test"]:
     FINAL_IMAGES = []
     FINAL_ANNOTATIONS = []
 
+    SMALL_ANNOTATIONS = []
+    SMALL_IMAGES = []
+
     annotation_id = 0
     new_id = -1
     for _idx in INDICES:
@@ -65,27 +69,38 @@ for mode in ["train", "val", "test"]:
         old_path = os.path.join(images_dir, old_filename)
         new_filename = str(new_id).zfill(12)+".jpg"
         new_path = os.path.join(OUTPUT_IMAGES_DIR, new_filename)
-        shutil.copy(
-            old_path,
-            new_path
-        )
+        try:
+            shutil.copy(
+                old_path,
+                new_path
+            )
+        except:
+            continue
         print(new_id, new_filename)
-        FINAL_IMAGES.append(templates.image(new_id, new_filename, width=300, height=300))
+        image_template = templates.image(new_id, new_filename, width=300, height=300)
+        FINAL_IMAGES.append(image_template)
 
         # Correct and add annotations
         annotation_ids = coco.getAnnIds(imgIds=old_id)
+        IMAGE_ANNOTATIONS = []
         for _ann_id in annotation_ids:
             ann = coco.loadAnns(_ann_id)
             for _ann in ann:
                 _ann["id"] = annotation_id
                 annotation_id += 1
                 _ann["image_id"] = new_id
-                FINAL_ANNOTATIONS.append(_ann)
+                IMAGE_ANNOTATIONS.append(_ann)
+        FINAL_ANNOTATIONS.extend(IMAGE_ANNOTATIONS)
+
+        if random.randint(0, 100) <= 2:
+            SMALL_ANNOTATIONS.extend(IMAGE_ANNOTATIONS)
+            SMALL_IMAGES.append(image_template)
 
     print("Doing the final shuffle.....")
     random.shuffle(FINAL_IMAGES)
     random.shuffle(FINAL_ANNOTATIONS)
-
+    random.shuffle(SMALL_IMAGES)
+    random.shuffle(SMALL_ANNOTATIONS)
 
     final_object = {}
     final_object["info"] = templates.info()
@@ -97,4 +112,16 @@ for mode in ["train", "val", "test"]:
     annotation_output_path = os.path.join(OUTPUT_PATH,"annotation.json")
     fp = open(annotation_output_path, "w")
     fp.write(json.dumps(final_object))
+    fp.close()
+
+    # Write small annotations
+    small_object = {}
+    small_object["info"] = templates.info()
+    small_object["categories"] = templates.categories()
+    small_object["images"] = SMALL_IMAGES
+    small_object["annotations"] = SMALL_ANNOTATIONS
+    print("Writing to json")
+    annotation_output_path = os.path.join(OUTPUT_PATH,"annotation-small.json")
+    fp = open(annotation_output_path, "w")
+    fp.write(json.dumps(small_object))
     fp.close()

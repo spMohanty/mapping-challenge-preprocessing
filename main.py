@@ -152,24 +152,28 @@ def generate_data(filelist, mode="train"):
     print("Correcting Image ids......")
     for _idx, image in enumerate(dataset["images"]):
         # Copy file over
-        image_id = dataset["images"][_idx]["id"]
-        new_image_id = integral_image_id_map[image_id]
-        source_path = "{}/{}/{}/{}/{}".format(
-            OUTPUT, DATASET_NAME, mode,
-            "images", image_id+".jpg")
-        target_path = "{}/{}/{}/{}/{}".format(
-            OUTPUT, DATASET_NAME, mode,
-            "images", str(new_image_id).zfill(12)+".jpg")
+        try:
+            image_id = dataset["images"][_idx]["id"]
+            new_image_id = integral_image_id_map[image_id]
+            source_path = "{}/{}/{}/{}/{}".format(
+                OUTPUT, DATASET_NAME, mode,
+                "images", image_id+".jpg")
+            target_path = "{}/{}/{}/{}/{}".format(
+                OUTPUT, DATASET_NAME, mode,
+                "images", str(new_image_id).zfill(12)+".jpg")
 
-        if np.random.random() < 0.2:
-            print("Correcting Image ids :: Completed : {} out of {}".format(_idx, len(image_ids)))
+            if np.random.random() < 0.2:
+                print("Correcting Image ids :: Completed : {} out of {}".format(_idx, len(image_ids)))
 
-        os.rename(source_path, target_path)
-        dataset["images"][_idx]["id"] = new_image_id
-        dataset["images"][_idx]["file_name"] = str(new_image_id).zfill(12)+".jpg"
-        # Correct entry in DATA_MAP
-        DATA_MAP[new_image_id] = DATA_MAP[image_id]
-        del DATA_MAP[image_id]
+            os.rename(source_path, target_path)
+            dataset["images"][_idx]["id"] = new_image_id
+            dataset["images"][_idx]["file_name"] = str(new_image_id).zfill(12)+".jpg"
+            # Correct entry in DATA_MAP
+            DATA_MAP[new_image_id] = DATA_MAP[image_id]
+            del DATA_MAP[image_id]
+        except Exception as e:
+            print("Encounter Error :( Ignoring")
+            pass
 
 
     # Correct image_ids in Annotations
@@ -228,8 +232,9 @@ if __name__ == "__main__":
     # ln -s /mount/SDG/mapping-challenge/generated/AOI_5_Khartoum_Train/train/images khartoum
 
     # for _dataset in ["AOI_2_Vegas_Train"]:
-    # for _dataset in ["AOI_2_Vegas_Train", "AOI_3_Paris_Train", "AOI_4_Shanghai_Train", "AOI_5_Khartoum_Train"]:
-    for _dataset in ["AOI_3_Paris_Train", "AOI_4_Shanghai_Train", "AOI_5_Khartoum_Train"]:
+    # for _dataset in ["AOI_3_Paris_Train", "AOI_4_Shanghai_Train", "AOI_5_Khartoum_Train"]:
+    # for _dataset in ["AOI_5_Khartoum_Train"]:
+    for _dataset in ["AOI_2_Vegas_Train", "AOI_3_Paris_Train", "AOI_4_Shanghai_Train", "AOI_5_Khartoum_Train"]:
         DATASET_NAME = _dataset
         DATA_MAP = {}
         set_annotation_id_map({})
