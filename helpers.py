@@ -95,7 +95,7 @@ def process_tile(image_id, xml_path, image_path, geojson_path, rotation=0):
                                             _polygons,
                                             tile_width,
                                             tile_height,
-                                            poly_format=False)
+                                            poly_format=True)
 
             annotation = templates.annotataion(
                                 id=get_random_annotation_id(),
