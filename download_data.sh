@@ -45,11 +45,20 @@
 
 
 
-mkdir data/
-aws s3 cp s3://spacenet-dataset/spacenet/SN2_buildings/train/tarballs/SN2_buildings_train_AOI_2_Vegas.tar.gz data/SN2_buildings_train_AOI_2_Vegas.tar.gz & 
-aws s3 cp s3://spacenet-dataset/spacenet/SN2_buildings/train/tarballs/SN2_buildings_train_AOI_3_Paris.tar.gz data/SN2_buildings_train_AOI_3_Paris.tar.gz & 
-aws s3 cp s3://spacenet-dataset/spacenet/SN2_buildings/train/tarballs/SN2_buildings_train_AOI_4_Shanghai.tar.gz data/SN2_buildings_train_AOI_4_Shanghai.tar.gz & 
-aws s3 cp s3://spacenet-dataset/spacenet/SN2_buildings/train/tarballs/SN2_buildings_train_AOI_5_Khartoum.tar.gz data/SN2_buildings_train_AOI_5_Khartoum.tar.gz &
+export DATASET_DIRECTORY="/scratch/mohanty/mapping-challenge-data"
+
+aws s3 cp s3://spacenet-dataset/spacenet/SN2_buildings/train/tarballs/SN2_buildings_train_AOI_2_Vegas.tar.gz $DATASET_DIRECTORY/SN2_buildings_train_AOI_2_Vegas.tar.gz & 
+aws s3 cp s3://spacenet-dataset/spacenet/SN2_buildings/train/tarballs/SN2_buildings_train_AOI_3_Paris.tar.gz $DATASET_DIRECTORY/SN2_buildings_train_AOI_3_Paris.tar.gz & 
+aws s3 cp s3://spacenet-dataset/spacenet/SN2_buildings/train/tarballs/SN2_buildings_train_AOI_4_Shanghai.tar.gz $DATASET_DIRECTORY/SN2_buildings_train_AOI_4_Shanghai.tar.gz & 
+aws s3 cp s3://spacenet-dataset/spacenet/SN2_buildings/train/tarballs/SN2_buildings_train_AOI_5_Khartoum.tar.gz $DATASET_DIRECTORY/SN2_buildings_train_AOI_5_Khartoum.tar.gz &
+
+# Then go on to extract each of them with: 
+# cd $DATASET_DIRECTORY
+# tar -xvzf SN2_buildings_train_AOI_2_Vegas.tar.gz
+# tar -xvzf SN2_buildings_train_AOI_3_Paris.tar.gz 
+# tar -xvzf SN2_buildings_train_AOI_4_Shanghai.tar.gz 
+# tar -xvzf SN2_buildings_train_AOI_5_Khartoum.tar.gz
+
 
 
 
