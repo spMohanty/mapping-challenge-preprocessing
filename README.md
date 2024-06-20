@@ -5,6 +5,10 @@
 
 # Install 
 ```
+
+apt-get install parallel # this is needed for parallelized download of the files in ./download.sh
+
+
 # This is a fork of the spacenetv2 utilities repo, which adds the py3 support + parallelization using ray
 git clone git@github.com:spMohanty/spacenetv2-utilities-py3.git utilities
 cd utilities 
@@ -14,15 +18,21 @@ cd ../
 git clone git@github.com:spMohanty/mapping-challenge-preprocessing.git
 cd mapping-challenge-preprocessing
 pip install -r requirements.txt
+
+# install aicrowd's fork of pycocotools 
+pip install git+https://github.com/AIcrowd/coco.git#subdirectory=PythonAPI
+
 ```
 
 # Usage
 ```
-./download_data.sh # please refer to the inline comments to untar the files
+
+export DATASET_DIRECTORY="/scratch/mohanty/mapping-challenge-data/raw" # update this path to your local path
+
+
+./download_data.sh # please ensure your AWS keys are correctly set before you run this
 
 # generte the RGB data and the PASCALVOC annotations
-export DATASET_DIRECTORY="/scratch/mohanty/mapping-challenge-data" # update this path to your local path
-
 DATASET_NAME="AOI_2_Vegas_Train" ./prepare-data.sh
 DATASET_NAME="AOI_3_Paris_Train" ./prepare-data.sh
 DATASET_NAME="AOI_4_Shanghai_Train" ./prepare-data.sh

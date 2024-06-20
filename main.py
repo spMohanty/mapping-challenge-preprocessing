@@ -20,9 +20,16 @@ np.random.seed(17060728)
 rd.seed(17060728)
 
 SALT = "5a299fff-89c7-4fda-8d7d-c62b06397919"
-OUTPUT = "/mount/SDG/mapping-challenge/generated"
-DATASET_NAME = "AOI_2_Vegas_Train"
-path = "/mount/SDG/mapping-challenge/{}/PASCALVOC_annotations/annotations/*.jpg".format(DATASET_NAME)
+
+DATASET_DIRECTORY = os.getenv("DATASET_DIRECTORY", "/scratch/mohanty/mapping-challenge-data/raw")
+OUTPUT = os.getenv("OUTPUT_DIRECTORY", "/scratch/mohanty/mapping-challenge-data/processed")
+os.makedirs(OUTPUT, exist_ok=True)
+
+DATASET_NAME = os.getenv("DATASET_NAME", "AOI_2_Vegas_Train")
+
+# path = "/mount/SDG/mapping-challenge/{}/PASCALVOC_annotations/annotations/*.jpg".format(DATASET_NAME)
+
+path = f"{DATASET_DIRECTORY}/{DATASET_NAME}/PASCALVOC_annotations/annotations/*.jpg"
 IMAGE_PATH_TEMPLATE = "{}/{}/{}images"
 
 DATA_MAP = {}

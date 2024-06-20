@@ -1,69 +1,39 @@
 #!/bin/bash
 
-# Download rio dataset from s3://spacenet-dataset/competition1
-# mkdir -p competition1/spacenet_TrainData
-# mkdir -p competition1/spacenet_TrainData/vectordata
-# aws s3api get-object --bucket spacenet-dataset --key competition1/spacenet_TrainData/3band.tar.gz --request-payer requester competition1/spacenet_TrainData/3band.tar.gz &
-# aws s3api get-object --bucket spacenet-dataset --key competition1/spacenet_TrainData/vectordata/geojson.tar.gz --request-payer requester competition1/spacenet_TrainData/vectordata/geojson.tar.gz & 
-# aws s3api get-object --bucket spacenet-dataset --key competition1/spacenet_TrainData/vectordata/summarydata.tar.gz --request-payer requester competition1/spacenet_TrainData/vectordata/summarydata.tar.gz &
+# Check if DATASET_DIRECTORY is already set, if not set it to the default value
+if [ -z "$DATASET_DIRECTORY" ]; then
+  export DATASET_DIRECTORY="/scratch/mohanty/mapping-challenge-data/raw"
+fi
 
+mkdir -p $DATASET_DIRECTORY
 
-# Spacenet V2 dataset
-# https://spacenet.ai/spacenet-buildings-dataset-v2/
+# Create a list of download links and file paths
+DOWNLOAD_LINKS=(
+  "s3://spacenet-dataset/spacenet/SN2_buildings/train/tarballs/SN2_buildings_train_AOI_2_Vegas.tar.gz"
+  "s3://spacenet-dataset/spacenet/SN2_buildings/train/tarballs/SN2_buildings_train_AOI_3_Paris.tar.gz"
+  "s3://spacenet-dataset/spacenet/SN2_buildings/train/tarballs/SN2_buildings_train_AOI_4_Shanghai.tar.gz"
+  "s3://spacenet-dataset/spacenet/SN2_buildings/train/tarballs/SN2_buildings_train_AOI_5_Khartoum.tar.gz"
+)
 
-# Shanghai
-# mkdir -p data/AOI_4_Shanghai/
-# aws s3api get-object --bucket spacenet-dataset --key AOI_4_Shanghai/AOI_4_Shanghai_Train.tar.gz --request-payer requester data/AOI_4_Shanghai/AOI_4_Shanghai_Train.tar.gz &
-# aws s3api get-object --bucket spacenet-dataset --key AOI_4_Shanghai/AOI_4_Shanghai_Test_public.tar.gz --request-payer requester data/AOI_4_Shanghai/AOI_4_Shanghai_Test_public.tar.gz &
+FILE_PATHS=(
+  "$DATASET_DIRECTORY/SN2_buildings_train_AOI_2_Vegas.tar.gz"
+  "$DATASET_DIRECTORY/SN2_buildings_train_AOI_3_Paris.tar.gz"
+  "$DATASET_DIRECTORY/SN2_buildings_train_AOI_4_Shanghai.tar.gz"
+  "$DATASET_DIRECTORY/SN2_buildings_train_AOI_5_Khartoum.tar.gz"
+)
 
-# # Vegas
-# mkdir -p data/AOI_2_Vegas/
-# aws s3api get-object --bucket spacenet-dataset --key AOI_2_Vegas/AOI_2_Vegas_Train.tar.gz --request-payer requester data/AOI_2_Vegas/AOI_2_Vegas_Train.tar.gz &
-# aws s3api get-object --bucket spacenet-dataset --key AOI_2_Vegas/AOI_2_Vegas_Test_public.tar.gz --request-payer requester data/AOI_2_Vegas/AOI_2_Vegas_Test_public.tar.gz &
+# Download files in parallel
+parallel -j 4 aws s3 cp ::: "${DOWNLOAD_LINKS[@]}" ::: "${FILE_PATHS[@]}"
 
-# #Paris
-# mkdir -p data/AOI_3_Paris/
-# aws s3api get-object --bucket spacenet-dataset --key AOI_3_Paris/AOI_3_Paris_Train.tar.gz --request-payer requester data/AOI_3_Paris/AOI_3_Paris_Train.tar.gz & 
-# aws s3api get-object --bucket spacenet-dataset --key AOI_3_Paris/AOI_3_Paris_Test_public.tar.gz --request-payer requester data/AOI_3_Paris/AOI_3_Paris_Test_public.tar.gz &
+cd $DATASET_DIRECTORY
 
-# #Khartoum
-# mkdir -p data/AOI_5_Khartoum/
-# aws s3api get-object --bucket spacenet-dataset --key AOI_5_Khartoum/AOI_5_Khartoum_Train.tar.gz --request-payer requester data/AOI_5_Khartoum/AOI_5_Khartoum_Train.tar.gz &
-# aws s3api get-object --bucket spacenet-dataset --key AOI_5_Khartoum/AOI_5_Khartoum_Test_public.tar.gz --request-payer requester data/AOI_5_Khartoum/AOI_5_Khartoum_Test_public.tar.gz &
+# Create a list of tar files to extract
+TAR_FILES=(
+  "SN2_buildings_train_AOI_2_Vegas.tar.gz"
+  "SN2_buildings_train_AOI_3_Paris.tar.gz"
+  "SN2_buildings_train_AOI_4_Shanghai.tar.gz"
+  "SN2_buildings_train_AOI_5_Khartoum.tar.gz"
+)
 
-
-
-#SpacenetRoads
-# aws s3api get-object --bucket spacenet-dataset --key SpaceNet_Roads_Competition/AOI_2_Vegas_Roads_Test_Public.tar.gz --request-payer requester AOI_2_Vegas_Roads_Test_Public.tar.gz &
-# aws s3api get-object --bucket spacenet-dataset --key SpaceNet_Roads_Competition/AOI_2_Vegas_Roads_Train.tar.gz --request-payer requester AOI_2_Vegas_Roads_Train.tar.gz &
-# aws s3api get-object --bucket spacenet-dataset --key SpaceNet_Roads_Competition/AOI_3_Paris_Roads_Test_Public.tar.gz --request-payer requester AOI_3_Paris_Roads_Test_Public.tar.gz &
-# aws s3api get-object --bucket spacenet-dataset --key SpaceNet_Roads_Competition/AOI_3_Paris_Roads_Train.tar.gz --request-payer requester AOI_3_Paris_Roads_Train.tar.gz & 
-# aws s3api get-object --bucket spacenet-dataset --key SpaceNet_Roads_Competition/AOI_4_Shanghai_Roads_Test_Public.tar.gz --request-payer requester AOI_4_Shanghai_Roads_Test_Public.tar.gz &
-# aws s3api get-object --bucket spacenet-dataset --key SpaceNet_Roads_Competition/AOI_4_Shanghai_Roads_Train.tar.gz --request-payer requester AOI_4_Shanghai_Roads_Train.tar.gz &
-# aws s3api get-object --bucket spacenet-dataset --key SpaceNet_Roads_Competition/AOI_5_Khartoum_Roads_Test_Public.tar.gz --request-payer requester AOI_5_Khartoum_Roads_Test_Public.tar.gz &
-# aws s3api get-object --bucket spacenet-dataset --key SpaceNet_Roads_Competition/AOI_5_Khartoum_Roads_Train.tar.gz --request-payer requester AOI_5_Khartoum_Roads_Train.tar.gz &
-
-
-
-export DATASET_DIRECTORY="/scratch/mohanty/mapping-challenge-data"
-
-aws s3 cp s3://spacenet-dataset/spacenet/SN2_buildings/train/tarballs/SN2_buildings_train_AOI_2_Vegas.tar.gz $DATASET_DIRECTORY/SN2_buildings_train_AOI_2_Vegas.tar.gz & 
-aws s3 cp s3://spacenet-dataset/spacenet/SN2_buildings/train/tarballs/SN2_buildings_train_AOI_3_Paris.tar.gz $DATASET_DIRECTORY/SN2_buildings_train_AOI_3_Paris.tar.gz & 
-aws s3 cp s3://spacenet-dataset/spacenet/SN2_buildings/train/tarballs/SN2_buildings_train_AOI_4_Shanghai.tar.gz $DATASET_DIRECTORY/SN2_buildings_train_AOI_4_Shanghai.tar.gz & 
-aws s3 cp s3://spacenet-dataset/spacenet/SN2_buildings/train/tarballs/SN2_buildings_train_AOI_5_Khartoum.tar.gz $DATASET_DIRECTORY/SN2_buildings_train_AOI_5_Khartoum.tar.gz &
-
-# Then go on to extract each of them with: 
-# cd $DATASET_DIRECTORY
-# tar -xvzf SN2_buildings_train_AOI_2_Vegas.tar.gz
-# tar -xvzf SN2_buildings_train_AOI_3_Paris.tar.gz 
-# tar -xvzf SN2_buildings_train_AOI_4_Shanghai.tar.gz 
-# tar -xvzf SN2_buildings_train_AOI_5_Khartoum.tar.gz
-
-
-
-
-
-
-
-
-
+# Extract tar files in parallel
+parallel -j 4 tar -xvzf ::: "${TAR_FILES[@]}"

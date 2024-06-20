@@ -4,7 +4,7 @@
 
 # Check if DATASET_DIRECTORY is already set, if not set it to the default value
 if [ -z "$DATASET_DIRECTORY" ]; then
-  export DATASET_DIRECTORY="/scratch/mohanty/mapping-challenge-data"
+  export DATASET_DIRECTORY="/scratch/mohanty/mapping-challenge-data/raw"
 fi
 
 # Check if DATASET_NAME is already set, if not set it to the default value
