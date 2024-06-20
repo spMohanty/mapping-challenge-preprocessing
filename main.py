@@ -15,6 +15,9 @@ import uuid
 import hashlib
 import math
 
+from sklearn.model_selection import train_test_split
+
+
 rd = random.Random()
 np.random.seed(17060728)
 rd.seed(17060728)
@@ -29,7 +32,6 @@ DATASET_NAME = os.getenv("DATASET_NAME", "AOI_2_Vegas_Train")
 
 # path = "/mount/SDG/mapping-challenge/{}/PASCALVOC_annotations/annotations/*.jpg".format(DATASET_NAME)
 
-path = f"{DATASET_DIRECTORY}/{DATASET_NAME}/PASCALVOC_annotations/annotations/*.jpg"
 IMAGE_PATH_TEMPLATE = "{}/{}/{}images"
 
 DATA_MAP = {}
@@ -78,7 +80,7 @@ def generate_data(filelist, mode="train"):
     dataset["annotations"] = []
 
     for _idx, _file in enumerate(filelist):
-        print("Failed Processing : {}, {}".format(no_buildings, _idx))
+        print("Processing : {}, {}".format(no_buildings, _idx))
         image_file_name = _file.split("/")[-1]
         image_key = image_file_name.replace(".jpg", "")
 
@@ -89,9 +91,9 @@ def generate_data(filelist, mode="train"):
         geojson_path = _file.replace("/annotations/","/geojson/buildings/")\
                             .replace("RGB-PanSharpen", "buildings")\
                             .replace(".jpg", ".geojson")
-        # print(image_file_name, "\n", image_key, "\n", xml_path, "\n", \
-        #     dataset_name, "\n", xml_path, "\n", geojson_path, "\n", \
-        #     segcls_path, "\n", segobj_path)
+        print(image_file_name, "\n", image_key, "\n", xml_path, "\n", \
+            dataset_name, "\n", xml_path, "\n", geojson_path, "\n", \
+            segcls_path, "\n", segobj_path)
 
         image_id = get_random_image_id()
 
@@ -225,6 +227,10 @@ def generate_data(filelist, mode="train"):
     fp.close()
     print("Writing DATA_MAP to ", target_path)
 
+def split_dataset(files, train_percent=0.7, val_percent=0.15, test_percent=0.15):
+    train_files, test_files = train_test_split(files, test_size=(val_percent + test_percent))
+    val_files, test_files = train_test_split(test_files, test_size=test_percent / (val_percent + test_percent))
+    return train_files, val_files, test_files
 
 if __name__ == "__main__":
     # xml_path = "examples/image.xml"
@@ -250,14 +256,15 @@ if __name__ == "__main__":
         train_percent = 0.7
         val_percent = 0.15
         test_percent = 0.15
-        files = glob.glob(path)
+        
+        
+        image_tile_path_glob = f"{DATASET_DIRECTORY}/{DATASET_NAME}/PASCALVOC_annotations/annotations/*.jpg"
+        print(image_tile_path_glob)
+        files = glob.glob(image_tile_path_glob)
 
         random.shuffle(files)
-        marker_1 = int(train_percent*len(files))
-        marker_2 = int((train_percent + val_percent)*len(files))
-        train_set = files[:marker_1]
-        val_set = files[marker_1:marker_2]
-        test_set = files[marker_2:]
+        
+        train_set, val_set, test_set = split_dataset(files, train_percent, val_percent, test_percent)
 
         train_annotations = generate_data(train_set, mode="train")
         train_annotations = generate_data(val_set, mode="val")

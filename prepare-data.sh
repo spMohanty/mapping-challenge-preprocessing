@@ -27,5 +27,4 @@ python ../utilities/python/createDataSpaceNet.py $DATASET_DIRECTORY/$DATASET_NAM
            --annotationType PASCALVOC2012 \
            --outputFileType JPEG \
            --convertTo8Bit \
-           --imgSizePix 300 \
-           --trainTestSplit 0.8
+           --imgSizePix 300 
