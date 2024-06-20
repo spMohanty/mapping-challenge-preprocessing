@@ -16,13 +16,20 @@ import sys
 
 from sklearn.model_selection import train_test_split
 
+image_id_map = {}
 annotation_id_map = {}
-def get_random_annotation_id():
+
+def get_random_id(mode="image_id"):
+    if mode == "image_id":
+        reference_map = image_id_map
+    elif mode == "annotation_id":
+        reference_map = annotation_id_map
+    
     while True:
-        _id = str(uuid.uuid4())
+        _id = int(uuid.uuid4().int >> 64)  # Convert UUID to an integer and take part of it
         # This is just to avoid collision in the random ids
         try:
-            foo = annotation_id_map[_id]
+            foo = reference_map[_id]
             # If this id exists, then try this again
         except:
             # Else, respond with the generated id
@@ -30,6 +37,7 @@ def get_random_annotation_id():
 
 def get_annotation_id_map():
     return annotation_id_map
+
 def set_annotation_id_map(_map):
     annotation_id_map = _map
 
@@ -100,7 +108,7 @@ def process_tile(image_id, xml_path, image_path, geojson_path, rotation=0):
                                             poly_format=True)
 
             annotation = templates.annotataion(
-                                id=get_random_annotation_id(),
+                                id=get_random_id(mode="annotation_id"),
                                 image_id=image_id,
                                 segmentation=segmentation,
                                 area=float(area),
