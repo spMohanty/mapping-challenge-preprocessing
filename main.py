@@ -170,6 +170,49 @@ class MappingChallengeDatasetSplit:
         with open(target_path, "w") as fp:
             fp.write(json.dumps(self.image_id_to_file_path_map))
             
+    @staticmethod
+    def merge_splits(splits, split_name="merged"):
+        all_image_objects = []
+        all_annotation_objects = []
+        all_image_id_to_file_path_map = {}
+        all_image_id_to_rotation_map = {}
+        total_tiles_without_buildings = 0
+        total_unique_buildings = 0
+
+        existing_image_ids = set()
+        existing_annotation_ids = set()
+        
+        for _split in splits:
+            all_image_objects.extend(_split.image_objects)
+            all_annotation_objects.extend(_split.annotation_objects)
+            all_image_id_to_file_path_map.update(_split.image_id_to_file_path_map)
+            all_image_id_to_rotation_map.update(_split.image_id_to_rotation_map)
+            total_tiles_without_buildings += _split.num_tiles_without_buildings
+            total_unique_buildings += _split.num_unique_buildings
+            
+            # ensure that the image_ids are unique across all splits
+            for image_id in _split.image_id_to_file_path_map:
+                if image_id in existing_image_ids:
+                    raise ValueError(f"Image ID {image_id} is not unique across all splits")
+                existing_image_ids.add(image_id)
+                
+            # ensure that the annotation ids are unique across all splits
+            for annotation in _split.annotation_objects:
+                if annotation["id"] in existing_annotation_ids:
+                    raise ValueError(f"Annotation ID {annotation['id']} is not unique across all splits")
+                existing_image_ids.add(annotation["id"])
+
+        # create new split object
+        merged_split = MappingChallengeDatasetSplit("merged", split_name, [])
+        merged_split.image_objects = all_image_objects
+        merged_split.annotation_objects = all_annotation_objects
+        merged_split.image_id_to_file_path_map = all_image_id_to_file_path_map
+        merged_split.image_id_to_rotation_map = all_image_id_to_rotation_map
+        merged_split.num_tiles_without_buildings = total_tiles_without_buildings
+        merged_split.num_unique_buildings = total_unique_buildings
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+        return merged_split
+            
 class MappingChallengeDataset:
     def __init__(self, dataset_name, train_percent=0.7, val_percent=0.15, test_percent=0.15):
         
@@ -203,7 +246,14 @@ class MappingChallengeDataset:
         
 
 if __name__ == "__main__":
-    dataset = MappingChallengeDataset("AOI_3_Paris_Train")
+    dataset1 = MappingChallengeDataset("AOI_3_Paris_Train")
+    dataset2 = MappingChallengeDataset("AOI_5_Khartoum_Train")
+    
+    merged_dataset = MappingChallengeDatasetSplit.merge_splits([dataset1.train_split, dataset2.train_split])
+    
+    merged_dataset.save_split("merged_dataset")
+    
+    
 
 
 # def generate_image_and_annotation_objects(filelist, description=""):
