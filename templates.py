@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
 
-def image(id, filename, width=300, height=300):
+def image(id, filename, width=300, height=300, augmentation_source_id=None):
     return dict(
         id=id,
         file_name=filename,
         width=width,
-        height=height
+        height=height,
+        augmentation_source_id=augmentation_source_id
     )
 
 def annotataion(id, image_id, segmentation, area, bbox, \
@@ -23,13 +24,13 @@ def annotataion(id, image_id, segmentation, area, bbox, \
     )
 
 def info():
-    return { 'contributor': 'crowdAI.org',
-             'about': 'Dataset for crowdAI Mapping Challenge',
-             'date_created': '07/03/2018',
+    return { 'contributor': 'AIcrowd.com',
+             'about': 'Corrected Dataset for crowdAI Mapping Challenge',
+             'date_created': '20/06/2024',
              'description': 'crowdAI mapping-challenge dataset',
-             'url': 'https://www.crowdai.org/challenges/mapping-challenge',
-             'version': '1.0',
-             'year': 2018}
+             'url': 'https://www.aicrowd.com/challenges/mapping-challenge',
+             'version': '2.0',
+             'year': 2024}
 
 def categories():
     return [{'id': 100, 'name': 'building', 'supercategory': 'building'}]

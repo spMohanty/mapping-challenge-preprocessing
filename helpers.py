@@ -14,6 +14,8 @@ from pycocotools import mask as cocomask
 import uuid
 import sys
 
+from sklearn.model_selection import train_test_split
+
 annotation_id_map = {}
 def get_random_annotation_id():
     while True:
@@ -169,11 +171,6 @@ def lat_long_to_pixel(tiff_source, point_x, point_y, bounds=(0,400, 0, 400)):
     yPixel = min(maxy_, yPixel)
     return xPixel, yPixel
 
-if __name__ == "__main__":
-    filepath = "/mount/SDG/mapping-challenge/AOI_2_Vegas_Train/PASCALVOC_annotations/RGB-PanSharpen/RGB-PanSharpen__-115.2454176_36.1563776998.tif"
-    tiff_source = gdal.Open(filepath)
-    print(lat_long_to_pixel(tiff_source, -115.24491289, 36.156570763000047))
-
 def rotate(origin, point, angle, integral=False):
     """
     Rotate a point counterclockwise by a given angle around a given origin.
@@ -191,3 +188,13 @@ def rotate(origin, point, angle, integral=False):
         qx = int(qx)
         qy = int(qy)
     return qx, qy
+
+def split_dataset(files, train_percent=0.7, val_percent=0.15, test_percent=0.15):
+    train_files, test_files = train_test_split(files, test_size=(val_percent + test_percent))
+    val_files, test_files = train_test_split(test_files, test_size=test_percent / (val_percent + test_percent))
+    return train_files, val_files, test_files
+
+if __name__ == "__main__":
+    filepath = "/mount/SDG/mapping-challenge/AOI_2_Vegas_Train/PASCALVOC_annotations/RGB-PanSharpen/RGB-PanSharpen__-115.2454176_36.1563776998.tif"
+    tiff_source = gdal.Open(filepath)
+    print(lat_long_to_pixel(tiff_source, -115.24491289, 36.156570763000047))

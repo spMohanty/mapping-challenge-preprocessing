@@ -8,15 +8,16 @@ import shutil
 import json
 
 import templates
-from helpers import process_tile, get_annotation_id_map, set_annotation_id_map
+from helpers import process_tile, get_annotation_id_map, set_annotation_id_map, split_dataset
 import random
 import json
 import uuid
 import hashlib
 import math
 
-from sklearn.model_selection import train_test_split
-
+from loguru import logger
+import tqdm
+from p_tqdm import p_map
 
 rd = random.Random()
 np.random.seed(17060728)
@@ -62,13 +63,14 @@ def ensure_directories_exist(dataset_name):
 
 def copy_image(source, target_path, rotation):
     assert os.path.exists(source)
-    print("Creating File : {} , Rotataion : {}".format(target_path, rotation))
+    logger.debug(f"Creating File : {target_path} , Rotataion : {rotation}")
     im = Image.open(source)
     im = im.rotate(-1 * rotation)
     im.save(target_path)
 
 def generate_data(filelist, mode="train"):
-    no_buildings = 0
+    num_tiles_with_no_buildings = 0
+    total_unique_buildings_detected = 0
 
     """
     Instantiate dataset json
@@ -79,8 +81,7 @@ def generate_data(filelist, mode="train"):
     dataset["images"] = []
     dataset["annotations"] = []
 
-    for _idx, _file in enumerate(filelist):
-        print("Processing : {}, {}".format(no_buildings, _idx))
+    for _idx, _file in enumerate(tqdm.tqdm(filelist, desc=f"Processing {mode} set")):
         image_file_name = _file.split("/")[-1]
         image_key = image_file_name.replace(".jpg", "")
 
@@ -91,13 +92,14 @@ def generate_data(filelist, mode="train"):
         geojson_path = _file.replace("/annotations/","/geojson/buildings/")\
                             .replace("RGB-PanSharpen", "buildings")\
                             .replace(".jpg", ".geojson")
-        print(image_file_name, "\n", image_key, "\n", xml_path, "\n", \
-            dataset_name, "\n", xml_path, "\n", geojson_path, "\n", \
-            segcls_path, "\n", segobj_path)
+
+        logger.debug(
+            f"Processing {image_file_name}\n{image_key}\n \
+                {xml_path}\n{dataset_name}\n{xml_path}\n \
+                {geojson_path}\n{segcls_path}\n{segobj_path}")
 
         image_id = get_random_image_id()
 
-        print(image_id)
         annotations = process_tile(image_id, xml_path, _file, geojson_path)
         if annotations:
             # Copy over file to relevant folder
@@ -111,7 +113,8 @@ def generate_data(filelist, mode="train"):
                     id=image_id,
                     filename=target_path.split("/")[-1],
                     width=400,
-                    height=400
+                    height=400,
+                    augmentation_source_id=None
                 )
             )
             # Add to DATA_MAP
@@ -119,7 +122,10 @@ def generate_data(filelist, mode="train"):
 
             #  Save annotation in dataset json
             dataset["annotations"].extend(annotations)
-
+            total_unique_buildings_detected += len(annotations)
+            
+            # Add rotations of the tile to the dataset
+            augmentation_source_id = image_id # pass this reference to the augmented images            
             for rotation in [90, -90, 180]:
                 if np.random.random() < 0.2:
                     # Not produce rotated image with a probability of 0.2
@@ -138,18 +144,21 @@ def generate_data(filelist, mode="train"):
                         id=image_id,
                         filename=target_path.split("/")[-1],
                         width=300,
-                        height=300
+                        height=300,
+                        augmentation_source_id=augmentation_source_id
                     )
                 )
                 # Add to DATA_MAP
                 DATA_MAP[image_id] =  _file + "::" + str(rotation)
 
                 # Save annotation in dataset json
-                dataset["annotations"].extend(annotations)
+                dataset["annotations"].extend(annotations)            
         else:
-            no_buildings += 1
-            print("No buildings in ", _file)
+            num_tiles_with_no_buildings += 1
+            logger.debug(f"No buildings in {_file}")
 
+    logger.info(f"Number of tiles without buildings : {num_tiles_with_no_buildings}")
+    logger.info(f"Total unique buildings detected : {total_unique_buildings_detected}")
     # Convert image_id and annotation id to integers (as coco api expects them to be)
     image_ids = list(DATA_MAP.keys())
     random.shuffle(image_ids)
@@ -170,9 +179,6 @@ def generate_data(filelist, mode="train"):
             target_path = "{}/{}/{}/{}/{}".format(
                 OUTPUT, DATASET_NAME, mode,
                 "images", str(new_image_id).zfill(12)+".jpg")
-
-            if np.random.random() < 0.2:
-                print("Correcting Image ids :: Completed : {} out of {}".format(_idx, len(image_ids)))
 
             os.rename(source_path, target_path)
             dataset["images"][_idx]["id"] = new_image_id
@@ -227,28 +233,13 @@ def generate_data(filelist, mode="train"):
     fp.close()
     print("Writing DATA_MAP to ", target_path)
 
-def split_dataset(files, train_percent=0.7, val_percent=0.15, test_percent=0.15):
-    train_files, test_files = train_test_split(files, test_size=(val_percent + test_percent))
-    val_files, test_files = train_test_split(test_files, test_size=test_percent / (val_percent + test_percent))
-    return train_files, val_files, test_files
-
 if __name__ == "__main__":
-    # xml_path = "examples/image.xml"
-    # image_path = "examples/image.jpg"
-    # geojson_path = "examples/buildings.geojson"
-    # segmentation_path = "examples/segmentation.png"
-    # ms_coco_format = process_tile(54605, xml_path, image_path, geojson_path, rotation=0)
-    # print("anns = ",ms_coco_format)
-
-    # ln -s /mount/SDG/mapping-challenge/generated/AOI_3_Paris_Train/train/images paris
-    # ln -s /mount/SDG/mapping-challenge/generated/AOI_4_Shanghai_Train/train/images shanghai
-    # ln -s /mount/SDG/mapping-challenge/generated/AOI_5_Khartoum_Train/train/images khartoum
-
     # for _dataset in ["AOI_2_Vegas_Train"]:
-    # for _dataset in ["AOI_3_Paris_Train", "AOI_4_Shanghai_Train", "AOI_5_Khartoum_Train"]:
-    # for _dataset in ["AOI_5_Khartoum_Train"]:
     for _dataset in ["AOI_2_Vegas_Train", "AOI_3_Paris_Train", "AOI_4_Shanghai_Train", "AOI_5_Khartoum_Train"]:
         DATASET_NAME = _dataset
+        logger.info("="*80)
+        logger.info(f"Processing Dataset: {DATASET_NAME}")
+        
         DATA_MAP = {}
         set_annotation_id_map({})
 
@@ -259,7 +250,6 @@ if __name__ == "__main__":
         
         
         image_tile_path_glob = f"{DATASET_DIRECTORY}/{DATASET_NAME}/PASCALVOC_annotations/annotations/*.jpg"
-        print(image_tile_path_glob)
         files = glob.glob(image_tile_path_glob)
 
         random.shuffle(files)
