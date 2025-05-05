@@ -7,33 +7,30 @@ fi
 
 mkdir -p $DATASET_DIRECTORY
 
-# Create a list of download links and file paths
-DOWNLOAD_LINKS=(
-  "s3://spacenet-dataset/spacenet/SN2_buildings/train/tarballs/SN2_buildings_train_AOI_2_Vegas.tar.gz"
-  "s3://spacenet-dataset/spacenet/SN2_buildings/train/tarballs/SN2_buildings_train_AOI_3_Paris.tar.gz"
-  "s3://spacenet-dataset/spacenet/SN2_buildings/train/tarballs/SN2_buildings_train_AOI_4_Shanghai.tar.gz"
-  "s3://spacenet-dataset/spacenet/SN2_buildings/train/tarballs/SN2_buildings_train_AOI_5_Khartoum.tar.gz"
-)
+# Download files sequentially
+echo "Downloading Vegas dataset..."
+aws s3 cp s3://spacenet-dataset/spacenet/SN2_buildings/train/tarballs/SN2_buildings_train_AOI_2_Vegas.tar.gz $DATASET_DIRECTORY/
 
-FILE_PATHS=(
-  "$DATASET_DIRECTORY/SN2_buildings_train_AOI_2_Vegas.tar.gz"
-  "$DATASET_DIRECTORY/SN2_buildings_train_AOI_3_Paris.tar.gz"
-  "$DATASET_DIRECTORY/SN2_buildings_train_AOI_4_Shanghai.tar.gz"
-  "$DATASET_DIRECTORY/SN2_buildings_train_AOI_5_Khartoum.tar.gz"
-)
+echo "Downloading Paris dataset..."
+aws s3 cp s3://spacenet-dataset/spacenet/SN2_buildings/train/tarballs/SN2_buildings_train_AOI_3_Paris.tar.gz $DATASET_DIRECTORY/
 
-# Download files in parallel
-parallel -j 4 aws s3 cp ::: "${DOWNLOAD_LINKS[@]}" ::: "${FILE_PATHS[@]}"
+echo "Downloading Shanghai dataset..."
+aws s3 cp s3://spacenet-dataset/spacenet/SN2_buildings/train/tarballs/SN2_buildings_train_AOI_4_Shanghai.tar.gz $DATASET_DIRECTORY/
+
+echo "Downloading Khartoum dataset..."
+aws s3 cp s3://spacenet-dataset/spacenet/SN2_buildings/train/tarballs/SN2_buildings_train_AOI_5_Khartoum.tar.gz $DATASET_DIRECTORY/
 
 cd $DATASET_DIRECTORY
 
-# Create a list of tar files to extract
-TAR_FILES=(
-  "SN2_buildings_train_AOI_2_Vegas.tar.gz"
-  "SN2_buildings_train_AOI_3_Paris.tar.gz"
-  "SN2_buildings_train_AOI_4_Shanghai.tar.gz"
-  "SN2_buildings_train_AOI_5_Khartoum.tar.gz"
-)
+# Extract files sequentially
+echo "Extracting Vegas dataset..."
+tar -xvzf SN2_buildings_train_AOI_2_Vegas.tar.gz
 
-# Extract tar files in parallel
-parallel -j 4 tar -xvzf ::: "${TAR_FILES[@]}"
+echo "Extracting Paris dataset..."
+tar -xvzf SN2_buildings_train_AOI_3_Paris.tar.gz
+
+echo "Extracting Shanghai dataset..."
+tar -xvzf SN2_buildings_train_AOI_4_Shanghai.tar.gz
+
+echo "Extracting Khartoum dataset..."
+tar -xvzf SN2_buildings_train_AOI_5_Khartoum.tar.gz

@@ -141,6 +141,8 @@ class MappingChallengeDatasetSplit:
         # Ensure the correct directory structure exists for the said output folder
         ensure_directories_exist(output_folder_name)
         
+        logger.info(f"Saving {output_folder_name} split to {OUTPUT_DIRECTORY}/{output_folder_name}")
+        
         # for all valid image objects, copy over the image files to the correct directory
         for image_object in tqdm.tqdm(self.image_objects, desc=f"Saving {output_folder_name}"):
             image_id = image_object["id"]
@@ -226,6 +228,7 @@ class MappingChallengeDataset:
     def create_dataset_splits(self):
         image_tile_path_glob = f"{DATASET_DIRECTORY}/{self.dataset_name}/PASCALVOC_annotations/annotations/*.jpg"
         all_files = glob.glob(image_tile_path_glob)
+        logger.info(f"Found {len(all_files)} files in dataset {self.dataset_name}")
         
         # shuffle all files
         random.shuffle(all_files)
@@ -246,12 +249,26 @@ class MappingChallengeDataset:
         
 
 if __name__ == "__main__":
-    dataset1 = MappingChallengeDataset("AOI_3_Paris_Train")
-    dataset2 = MappingChallengeDataset("AOI_5_Khartoum_Train")
+    datasets = [
+                    MappingChallengeDataset("AOI_2_Vegas_Train"),
+                    MappingChallengeDataset("AOI_3_Paris_Train"),
+                    MappingChallengeDataset("AOI_4_Shanghai_Train"),
+                    MappingChallengeDataset("AOI_5_Khartoum_Train")
+                ]
     
-    merged_dataset = MappingChallengeDatasetSplit.merge_splits([dataset1.train_split, dataset2.train_split])
+    merged_train_split = MappingChallengeDatasetSplit.merge_splits(
+            [dataset.train_split for dataset in datasets]
+    )
+    merged_val_split = MappingChallengeDatasetSplit.merge_splits(   
+            [dataset.val_split for dataset in datasets]
+    )
+    merged_test_split = MappingChallengeDatasetSplit.merge_splits(
+            [dataset.test_split for dataset in datasets]
+    )
     
-    merged_dataset.save_split("merged_dataset")
+    merged_train_split.save_split("final/merged_train_split")
+    merged_val_split.save_split("final/merged_val_split")
+    merged_test_split.save_split("final/merged_test_split")
     
     
 
