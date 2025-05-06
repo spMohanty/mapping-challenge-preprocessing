@@ -315,4 +315,20 @@ def analyze_hashes(results_dir: Path, prefix: str, splits: List[str], summary_on
                     print(f"      ... and {len(triple_overlap_images) - max_to_show} more")
 
 if __name__ == "__main__":
-    main()        
+    main()
+
+# Usage examples:
+# Basic usage (generate hashes and save to results/):
+#   python analyse_dataset.py /path/to/dataset
+#
+# Generate hashes for specific splits:
+#   python analyse_dataset.py /path/to/dataset --splits train val
+#
+# Generate hashes and analyze dataset:
+#   python analyse_dataset.py /path/to/dataset --analyze
+#
+# Skip hash generation and only analyze existing hash files:
+#   python analyse_dataset.py /path/to/dataset --analyze --skip-hash-generation
+#
+# Use custom output directory and prefix:
+#   python analyse_dataset.py /path/to/dataset --output-dir custom_results --prefix dataset_name        
