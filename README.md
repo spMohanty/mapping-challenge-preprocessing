@@ -1,7 +1,6 @@
 # crowdAI-mapping-challenge-preprocessing
 ![CrowdAI-Logo](https://github.com/crowdAI/crowdai/raw/master/app/assets/images/misc/crowdai-logo-smile.svg?sanitize=true)
 
-**TODO**: Add introduction, installation, usage
 
 # Install 
 ```
@@ -12,12 +11,21 @@ apt-get install parallel # this is needed for parallelized download of the files
 # This is a fork of the spacenetv2 utilities repo, which adds the py3 support + parallelization using ray
 git clone git@github.com:spMohanty/spacenetv2-utilities-py3.git utilities
 cd utilities 
-pip install -e .
+git checkout -b spacenetV2
 
-cd ../
+cd python 
+# Install gdal
+conda install -c conda-forge gdal
+pip install -r requirements.txt
+
+cd ../../
 git clone git@github.com:spMohanty/mapping-challenge-preprocessing.git
 cd mapping-challenge-preprocessing
 pip install -r requirements.txt
+
+
+# Install cython
+conda install conda-forge::cython
 
 # install aicrowd's fork of pycocotools 
 pip install git+https://github.com/AIcrowd/coco.git#subdirectory=PythonAPI

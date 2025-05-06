@@ -88,7 +88,7 @@ class MappingChallengeDatasetSplit:
         
         return image_file_name, image_key, dataset_name, segcls_path, segobj_path, xml_path, geojson_path
     
-    def load_split(self, include_augmented_images=True):
+    def load_split(self, include_augmented_images=False):
         for _idx, _file in enumerate(tqdm.tqdm(self.file_list, desc=f"Loading {self.dataset_name} - {self.split_name}")):
             # Parse Image related details
             image_file_name, image_key, dataset_name, segcls_path, segobj_path, xml_path, geojson_path = \
@@ -125,18 +125,18 @@ class MappingChallengeDatasetSplit:
         logger.info(f"Read {len(self.file_list)} tiles with {self.num_unique_buildings} unique buildings and {self.num_tiles_without_buildings} tiles without buildings")
                 
     def add_image_and_annotation_objects(self, image_id, image_file_name, annotations_for_image, augmentation_source_id=None):
-            self.image_objects.append(
-                templates.image(
-                    id=image_id,
-                    filename=image_file_name,
-                    width=300,
-                    height=300,
-                    augmentation_source_id=augmentation_source_id
-                )                    
-            )
-            self.annotation_objects.extend(annotations_for_image)
-            
-            self.num_unique_buildings += len(annotations_for_image)
+        self.image_objects.append(
+            templates.image(
+                id=image_id,
+                filename=image_file_name,
+                width=300,
+                height=300,
+                augmentation_source_id=augmentation_source_id
+            )                    
+        )
+        self.annotation_objects.extend(annotations_for_image)
+        
+        self.num_unique_buildings += len(annotations_for_image)
                 
     def save_split(self, output_folder_name):
         # Ensure the correct directory structure exists for the said output folder
@@ -145,10 +145,13 @@ class MappingChallengeDatasetSplit:
         logger.info(f"Saving {output_folder_name} split to {OUTPUT_DIRECTORY}/{output_folder_name}")
         
         # for all valid image objects, copy over the image files to the correct directory
-        for image_object in tqdm.tqdm(self.image_objects, desc=f"Saving {output_folder_name}"):
+        for image_object in tqdm.tqdm(self.image_objects, desc=f"Saving {output_folder_name}"):            
             image_id = image_object["id"]
+            target_file_name = f"{image_id}.jpg"
+            
+            image_object["file_name"] = target_file_name
             source_path = self.image_id_to_file_path_map[image_id]
-            target_path = f"{OUTPUT_DIRECTORY}/{output_folder_name}/images/{image_id}.jpg"
+            target_path = f"{OUTPUT_DIRECTORY}/{output_folder_name}/images/{target_file_name}"
             image_rotation = self.image_id_to_rotation_map[image_id]
             copy_image(source_path, target_path, rotation=image_rotation)
 
@@ -238,6 +241,11 @@ class MappingChallengeDataset:
         self.train_set_files, self.val_set_files, self.test_set_files = \
             split_dataset(all_files, self.train_percent, self.val_percent, self.test_percent)
         
+        print(f"Dataset: {self.dataset_name}")
+        print(f"Length of train set: {len(self.train_set_files)}")
+        print(f"Length of val set: {len(self.val_set_files)}")
+        print(f"Length of test set: {len(self.test_set_files)}")
+        
         # create split objects
         self.train_split = MappingChallengeDatasetSplit(self.dataset_name, "train", self.train_set_files)
         self.val_split = MappingChallengeDatasetSplit(self.dataset_name, "val", self.val_set_files)
@@ -267,9 +275,9 @@ if __name__ == "__main__":
             [dataset.test_split for dataset in datasets]
     )
     
-    merged_train_split.save_split("final/merged_train_split")
-    merged_val_split.save_split("final/merged_val_split")
-    merged_test_split.save_split("final/merged_test_split")
+    merged_train_split.save_split("final-corrected-v2/train")
+    merged_val_split.save_split("final-corrected-v2/val")
+    merged_test_split.save_split("final-corrected-v2/test")
     
     
 
