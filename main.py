@@ -6,6 +6,7 @@ import numpy as np
 import os
 import shutil
 import json
+import argparse
 
 import templates
 from helpers import process_tile, get_random_id, split_dataset
@@ -23,6 +24,9 @@ from p_tqdm import p_map
 logger.remove() 
 logger.add(sys.stdout, level="INFO") 
 
+# Parse command line arguments
+parser = argparse.ArgumentParser(description='Process mapping challenge dataset')
+args = parser.parse_args()
 
 rd = random.Random()
 np.random.seed(17060728)
@@ -88,7 +92,7 @@ class MappingChallengeDatasetSplit:
         
         return image_file_name, image_key, dataset_name, segcls_path, segobj_path, xml_path, geojson_path
     
-    def load_split(self, include_augmented_images=False):
+    def load_split(self, include_augmented_images=True):
         for _idx, _file in enumerate(tqdm.tqdm(self.file_list, desc=f"Loading {self.dataset_name} - {self.split_name}")):
             # Parse Image related details
             image_file_name, image_key, dataset_name, segcls_path, segobj_path, xml_path, geojson_path = \
@@ -147,7 +151,13 @@ class MappingChallengeDatasetSplit:
         # for all valid image objects, copy over the image files to the correct directory
         for image_object in tqdm.tqdm(self.image_objects, desc=f"Saving {output_folder_name}"):            
             image_id = image_object["id"]
-            target_file_name = f"{image_id}.jpg"
+            augmentation_source_id = image_object.get("augmentation_source_id")
+            # Use augmentation_source_id as filename prefix for rotated images
+            if augmentation_source_id is None:
+                target_file_name = f"{image_id}.jpg"
+            else:
+                # Keep unique per file by appending own image_id
+                target_file_name = f"{augmentation_source_id}_{image_id}.jpg"
             
             image_object["file_name"] = target_file_name
             source_path = self.image_id_to_file_path_map[image_id]
@@ -157,6 +167,7 @@ class MappingChallengeDatasetSplit:
 
         # shuffle annotation objects
         random.shuffle(self.annotation_objects)
+        
         
         # write dataset object
         dataset = {
@@ -170,6 +181,37 @@ class MappingChallengeDatasetSplit:
             fp.write(json.dumps(dataset))
         
         logger.info(f"Saved {output_folder_name} split to {target_path}")
+        
+        
+        # Gather data just for non-augmented annotations        
+        # Collect a list of image_ids that are not augmented images
+        image_ids_without_augmentation = set([])
+        self.image_objects_without_augmentation = []
+        for image_object in self.image_objects:
+            image_id = image_object["id"]
+            if image_object["augmentation_source_id"] is None:
+                image_ids_without_augmentation.add(image_id)
+                self.image_objects_without_augmentation.append(image_object)
+
+        # Filter out annotations that are not in the list of image_ids_without_augmentation
+        self.annotation_objects_without_augmentation = [
+            annotation for annotation in self.annotation_objects 
+            if annotation["image_id"] in image_ids_without_augmentation
+        ]   
+                
+        
+        # Write non-augmented dataset object
+        dataset_without_augmentation = {
+            "info": templates.info(),
+            "categories": templates.categories(),
+            "images": self.image_objects_without_augmentation,
+            "annotations": self.annotation_objects_without_augmentation
+        }
+        target_path = f"{OUTPUT_DIRECTORY}/{output_folder_name}/annotations/annotation_non_augmented.json"
+        with open(target_path, "w") as fp:
+            fp.write(json.dumps(dataset_without_augmentation))
+        
+        logger.info(f"Saved non-augmented {output_folder_name} split to {target_path}")
         
         # write datamap
         target_path = f"{OUTPUT_DIRECTORY}/{output_folder_name}_image_id_to_file_path_map.json"
@@ -220,12 +262,13 @@ class MappingChallengeDatasetSplit:
         return merged_split
             
 class MappingChallengeDataset:
-    def __init__(self, dataset_name, train_percent=0.7, val_percent=0.15, test_percent=0.15):
+    def __init__(self, dataset_name, train_percent=0.8, val_percent=0.10, test_percent=0.10, include_augmented_images=True):
         
         self.dataset_name = dataset_name
         self.train_percent = train_percent
         self.val_percent = val_percent
         self.test_percent = test_percent
+        self.include_augmented_images = include_augmented_images
         
         self.create_dataset_splits()
     
@@ -275,9 +318,14 @@ if __name__ == "__main__":
             [dataset.test_split for dataset in datasets]
     )
     
-    merged_train_split.save_split("final-corrected-v2/train")
-    merged_val_split.save_split("final-corrected-v2/val")
-    merged_test_split.save_split("final-corrected-v2/test")
     
+    
+    OUTPUT_FOLDER = "mapping-challenge-v2.0"
+    merged_train_split.save_split(f"{OUTPUT_FOLDER}/train")
+    merged_val_split.save_split(f"{OUTPUT_FOLDER}/val")
+    merged_test_split.save_split(f"{OUTPUT_FOLDER}/test")
+    
+    
+    # Generate Hashes 
     
 

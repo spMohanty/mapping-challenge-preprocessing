@@ -20,9 +20,18 @@ from collections import Counter
 def generate_image_hash(image_path: Path) -> str:
     try:
         img = Image.open(image_path)
-        angles = (0, 90, -90, 180)
-        hashes = [str(imagehash.phash(img.rotate(angle))) for angle in angles]
-        return "-".join(sorted(hashes))
+        # Compute minimal perceptual hash (phash) across the four dataset rotations
+        angles = [0, 90, -90, 180]
+        phash_ints = []
+        for angle in angles:
+            # Apply rotation matching main.py's convention
+            rot = img.rotate(-angle)
+            h = imagehash.phash(rot)
+            phash_ints.append(int(str(h), 16))
+        # Use the minimum hash as the canonical rotation-invariant hash
+        min_phash = min(phash_ints)
+        # Return as 16-character hex string
+        return f"{min_phash:016x}"
     except Exception as e:
         logging.error("Error processing %s: %s", image_path, e)
         return ""
@@ -38,8 +47,8 @@ def generate_hashes_for_dataset(dataset_folder: Path, exts=None, workers=8) -> d
     results = p_map(generate_image_hash, image_paths, num_cpus=workers)
     return {p.name: h for p, h in zip(image_paths, results) if h}
 
-def analyze_annotations(dataset_folder: Path, split: str) -> Dict:
-    annotation_file = dataset_folder / split / "annotations" / "annotation.json"
+def analyze_annotations(dataset_folder: Path, split: str, annotation_filename: str = "annotation.json") -> Dict:
+    annotation_file = dataset_folder / split / "annotations" / annotation_filename
     if not annotation_file.exists():
         logging.warning("Annotation file does not exist: %s", annotation_file)
         return {}
@@ -47,8 +56,12 @@ def analyze_annotations(dataset_folder: Path, split: str) -> Dict:
     with open(annotation_file, 'r') as f:
         coco_data = json.load(f)
     
-    num_images = len(coco_data.get('images', []))
+    images = coco_data.get('images', [])
+    num_images = len(images)
     num_annotations = len(coco_data.get('annotations', []))
+    
+    # Extract image filenames from annotation file
+    image_filenames = [img.get('file_name', '') for img in images]
     
     categories = {cat['id']: cat['name'] for cat in coco_data.get('categories', [])}
     
@@ -70,6 +83,7 @@ def analyze_annotations(dataset_folder: Path, split: str) -> Dict:
     return {
         'num_images': num_images,
         'num_annotations': num_annotations,
+        'image_filenames': image_filenames,  # Add list of image filenames to results
         'categories': categories,
         'category_counts': category_counts,
         'avg_annotations_per_image': avg_annotations_per_image,
@@ -104,7 +118,7 @@ def main():
     )
     parser.add_argument(
         "--workers", type=int, default=16, 
-        help="Number of parallel workers for processing (default: 8)"
+        help="Number of parallel workers for processing (default: 16)"
     )
     parser.add_argument(
         "--skip-hash-generation", action="store_true",
@@ -138,12 +152,7 @@ def main():
             ) for split in args.splits
         }
         
-        unique_hash_counts = {
-            split: len(set(hashes.values())) 
-            for split, hashes in hash_data.items() if hashes
-        }
-        
-        analyze_dataset_annotations(args.dataset_folder, args.splits, unique_hash_counts)
+        analyze_dataset_annotations(args.dataset_folder, args.splits, None, hash_data)
         analyze_hashes(args.output_dir, prefix, args.splits, summary_only=True)
 
 def load_hashes_file(file_path: Path) -> Dict[str, str]:
@@ -152,32 +161,88 @@ def load_hashes_file(file_path: Path) -> Dict[str, str]:
         return {}
     return json.load(file_path.open())
 
-def analyze_dataset_annotations(dataset_folder: Path, splits: List[str], unique_hash_counts: Dict[str, int] = None) -> None:
+def analyze_dataset_annotations(dataset_folder: Path, splits: List[str], unique_hash_counts: Dict[str, int] = None, hash_data: Dict[str, Dict[str, str]] = None) -> None:
     dataset_name = dataset_folder.name
     print(f"\n=== Annotation Statistics for '{dataset_name}' ===")
     
     annotation_stats = {}
     for split in splits:
         print(f"\nAnalyzing annotations for '{split}' split:")
-        stats = analyze_annotations(dataset_folder, split)
-        annotation_stats[split] = stats
         
-        if not stats:
-            print(f"  No annotations found for {split}")
-            continue
+        # Standard annotation file
+        standard_stats = analyze_annotations(dataset_folder, split)
+        annotation_stats[f"{split}_standard"] = standard_stats
+        
+        if standard_stats:
+            # Simple unique count of concatenated hash strings
+            unique_hashes_count = len(set(hash_data[split].values())) if hash_data and split in hash_data else 0
             
-        print(f"  Images: {stats['num_images']}")
-        print(f"  Buildings (annotations): {stats['num_annotations']}")
-        print(f"  Images with annotations: {stats['images_with_annotations']}")
-        print(f"  Images without annotations: {stats['images_without_annotations']}")
-        print(f"  Average buildings per image: {stats['avg_annotations_per_image']:.2f}")
-        print(f"  Maximum buildings in a single image: {stats['max_annotations_per_image']}")
+            print(f"\n  === Standard annotations (annotation.json) ===")
+            print(f"  Images: {standard_stats['num_images']}")
+            if hash_data and split in hash_data:
+                print(f"  Unique image hashes: {unique_hashes_count}")
+                print(f"  Expected unique images (if 4 rotations per image): ~{standard_stats['num_images'] // 4}")
+                
+                # Add ratio information to better understand if we're close to expected
+                if standard_stats['num_images'] > 0:
+                    expected_ratio = 4.0  # 4 rotations per image
+                    actual_ratio = standard_stats['num_images'] / (unique_hashes_count or 1)
+                    print(f"  Image to unique hash ratio: {actual_ratio:.2f} (expected ~{expected_ratio:.2f})")
+            
+            print(f"  Buildings (annotations): {standard_stats['num_annotations']}")
+            print(f"  Images with annotations: {standard_stats['images_with_annotations']}")
+            print(f"  Images without annotations: {standard_stats['images_without_annotations']}")
+            print(f"  Average buildings per image: {standard_stats['avg_annotations_per_image']:.2f}")
+            print(f"  Maximum buildings in a single image: {standard_stats['max_annotations_per_image']}")
+            
+            if standard_stats['category_counts']:
+                print("  Annotations per category:")
+                for cat_id, count in standard_stats['category_counts'].items():
+                    cat_name = standard_stats['categories'].get(cat_id, f"Unknown ({cat_id})")
+                    print(f"    {cat_name}: {count}")
+        else:
+            print(f"  No standard annotations found for {split}")
         
-        if stats['category_counts']:
-            print("  Annotations per category:")
-            for cat_id, count in stats['category_counts'].items():
-                cat_name = stats['categories'].get(cat_id, f"Unknown ({cat_id})")
-                print(f"    {cat_name}: {count}")
+        # Non-augmented annotation file
+        non_aug_stats = analyze_annotations(dataset_folder, split, "annotation_non_augmented.json")
+        annotation_stats[f"{split}_non_augmented"] = non_aug_stats
+        
+        if non_aug_stats:
+            # Count unique hashes only for images in the non-augmented annotation file
+            unique_hashes_count = 0
+            if hash_data and split in hash_data:
+                image_filenames = set(non_aug_stats.get('image_filenames', []))
+                filtered_hashes = {img: h for img, h in hash_data[split].items() if img in image_filenames}
+                unique_hashes_count = len(set(filtered_hashes.values())) if filtered_hashes else 0
+            # Clamp unique hash count to number of non-augmented images
+            unique_hashes_count = min(unique_hashes_count, non_aug_stats['num_images'])
+
+            print(f"\n  === Non-augmented annotations (annotation_non_augmented.json) ===")
+            print(f"  Images: {non_aug_stats['num_images']}")
+            if hash_data and split in hash_data:
+                print(f"  Unique image hashes: {unique_hashes_count}")
+                # Should be approximately equal for non-augmented images
+                print(f"  Expected unique images (if no rotations): ~{non_aug_stats['num_images']}")
+                
+                # Add ratio information
+                if non_aug_stats['num_images'] > 0:
+                    expected_ratio = 1.0  # No rotations
+                    actual_ratio = non_aug_stats['num_images'] / (unique_hashes_count or 1)
+                    print(f"  Image to unique hash ratio: {actual_ratio:.2f} (expected ~{expected_ratio:.2f})")
+            
+            print(f"  Buildings (annotations): {non_aug_stats['num_annotations']}")
+            print(f"  Images with annotations: {non_aug_stats['images_with_annotations']}")
+            print(f"  Images without annotations: {non_aug_stats['images_without_annotations']}")
+            print(f"  Average buildings per image: {non_aug_stats['avg_annotations_per_image']:.2f}")
+            print(f"  Maximum buildings in a single image: {non_aug_stats['max_annotations_per_image']}")
+            
+            if non_aug_stats['category_counts']:
+                print("  Annotations per category:")
+                for cat_id, count in non_aug_stats['category_counts'].items():
+                    cat_name = non_aug_stats['categories'].get(cat_id, f"Unknown ({cat_id})")
+                    print(f"    {cat_name}: {count}")
+        else:
+            print(f"  No non-augmented annotations found for {split}")
     
     if len(splits) > 1:
         print("\nComparison across splits:")
@@ -188,12 +253,25 @@ def analyze_dataset_annotations(dataset_folder: Path, splits: List[str], unique_
                 print(f"  num_unique_hashes:", end=" ")
                 print(", ".join(f"{split}: {value}" for split, value in values.items()))
         
-        for stat in ['num_images', 'num_annotations', 'avg_annotations_per_image']:
-            values = {split: stats.get(stat, 0) for split, stats in annotation_stats.items() if stats}
-            if values:
-                print(f"  {stat}:", end=" ")
-                print(", ".join(f"{split}: {value:.2f}" if isinstance(value, float) else f"{split}: {value}" 
-                               for split, value in values.items()))
+        for file_type in ["standard", "non_augmented"]:
+            title = "Standard annotations" if file_type == "standard" else "Non-augmented annotations"
+            print(f"\n  === {title} ===")
+            
+            for stat in ['num_images', 'num_annotations', 'avg_annotations_per_image']:
+                values = {split: stats.get(stat, 0) 
+                         for split, stats in annotation_stats.items() 
+                         if stats and f"_{file_type}" in split}
+                
+                if values:
+                    print(f"  {stat}:", end=" ")
+                    formatted_values = []
+                    for full_split, value in values.items():
+                        split = full_split.split('_')[0]  # Extract original split name
+                        if isinstance(value, float):
+                            formatted_values.append(f"{split}: {value:.2f}")
+                        else:
+                            formatted_values.append(f"{split}: {value}")
+                    print(", ".join(formatted_values))
 
 def analyze_hashes(results_dir: Path, prefix: str, splits: List[str], summary_only: bool = False) -> None:
     mappings: Dict[str, Dict[str, str]] = {
@@ -224,14 +302,7 @@ def analyze_hashes(results_dir: Path, prefix: str, splits: List[str], summary_on
         
         duplicate_count = len(mappings[split]) - len(unique_sets[split])
         if duplicate_count > 0:
-            print(f"\n{split} has {duplicate_count} duplicate images ({len(duplicate_hashes)} hash groups):")
-            for idx, h in enumerate(sorted(duplicate_hashes)):
-                if idx < 10:
-                    print(f"  Group {idx+1}: Hash {h} appears in {len(inv[split][h])} images:")
-                    print(f"    {', '.join(inv[split][h])}")
-                elif idx == 10:
-                    print(f"  ... and {len(duplicate_hashes) - 10} more duplicate hash groups")
-                    break
+            print(f"\n{split} has {duplicate_count} duplicate images ({len(duplicate_hashes)} hash groups)")
 
     overlap_stats = {}
     overlap_images = {}
@@ -313,6 +384,14 @@ def analyze_hashes(results_dir: Path, prefix: str, splits: List[str], summary_on
                 
                 if len(triple_overlap_images) > max_to_show:
                     print(f"      ... and {len(triple_overlap_images) - max_to_show} more")
+
+def generate_image_hash_list(img: Image) -> List[str]:
+    angles = [0, 90, -90, 180]
+    return [str(imagehash.phash(img.rotate(-angle))) for angle in angles]
+
+def hashes_similar(h1: List[str], h2: List[str], min_overlap: int = 2) -> bool:
+    """Return True if two hash lists share at least min_overlap elements."""
+    return len(set(h1).intersection(h2)) >= min_overlap
 
 if __name__ == "__main__":
     main()
