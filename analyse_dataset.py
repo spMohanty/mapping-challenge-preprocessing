@@ -18,23 +18,19 @@ from typing import Dict, List
 from collections import Counter
 
 def generate_image_hash(image_path: Path) -> str:
-    try:
-        img = Image.open(image_path)
-        # Compute minimal perceptual hash (phash) across the four dataset rotations
-        angles = [0, 90, -90, 180]
-        phash_ints = []
-        for angle in angles:
-            # Apply rotation matching main.py's convention
-            rot = img.rotate(-angle)
-            h = imagehash.phash(rot)
-            phash_ints.append(int(str(h), 16))
-        # Use the minimum hash as the canonical rotation-invariant hash
-        min_phash = min(phash_ints)
-        # Return as 16-character hex string
-        return f"{min_phash:016x}"
-    except Exception as e:
-        logging.error("Error processing %s: %s", image_path, e)
-        return ""
+    img = Image.open(image_path)
+    # Compute rotation-invariant perceptual hash (phash) across the four dataset rotations
+    angles = [0, 90, -90, 180]
+    phash_values = []
+    
+    for angle in angles:
+        # Apply rotation and calculate phash for each rotation
+        rot = img.rotate(-angle)
+        h = imagehash.phash(rot)
+        phash_values.append(str(h))
+
+    rotation_invariant_hash = "-".join(sorted(phash_values))
+    return rotation_invariant_hash
 
 def generate_hashes_for_dataset(dataset_folder: Path, exts=None, workers=8) -> dict[str, str]:
     if exts is None:
